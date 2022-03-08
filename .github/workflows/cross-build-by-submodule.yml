@@ -1,0 +1,16 @@
+name: Cross build by submodule
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: run all in one
+        working-directory: build-method-3
+        shell: ls

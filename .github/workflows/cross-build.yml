@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          repository: $ORG/${{ matrix.repos.name }}
+          repository: ${{ env.ORG }}/${{ matrix.repos.name }}
           path: ${{ matrix.repos.name }}
 
       - name: Run build for ${{ matrix.repos.name }}

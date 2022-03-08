@@ -1,0 +1,22 @@
+name: Cross Builder
+
+on: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repos: 
+          - { repo: "https://github.com/cjdcordeiro-test-org/.github", name: ".github" }
+          - { repo: "https://github.com/cjdcordeiro-test-org/test-repo1", name: "test-repo1" }
+    repos:
+      - uses: actions/checkout@v2
+        with:
+          repository: ${{ matrix.repos.repo }}
+          path: ${{ matrix.repos.name }}
+
+      - name: Run build for ${{ matrix.repos.name }}
+        working-directory: ${{ matrix.repos.name }}
+        run: ls
+

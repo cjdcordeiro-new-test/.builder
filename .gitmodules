@@ -1,0 +1,6 @@
+[submodule "build-method-3/test-repo1"]
+	path = build-method-3/test-repo1
+	url = https://github.com/cjdcordeiro-test-org/test-repo1
+[submodule "build-method-3/.github"]
+	path = build-method-3/.github
+	url = https://github.com/cjdcordeiro-test-org/.github

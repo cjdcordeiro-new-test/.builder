@@ -13,4 +13,6 @@ jobs:
 
       - name: run all in one
         working-directory: build-method-3
-        run: ls -a *
+        run: |
+          ls -a 
+          pwd

@@ -1,6 +1,6 @@
 name: Cross Builder
 
-on: [main]
+on: [push]
 
 jobs:
   build:

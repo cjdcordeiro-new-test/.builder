@@ -34,8 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        repository: ${{ env.ORG }}/${{ matrix.repos }}
-        path: ${{ matrix.repos }}
+        with:
+          repository: ${{ env.ORG }}/${{ matrix.repos }}
+          path: ${{ matrix.repos }}
 
       - name: run something in cross builder by ref
         run: |

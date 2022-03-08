@@ -15,7 +15,7 @@ jobs:
 
       - id: set-matrix
         run: |
-          matrix=$(echo "[ $(ls -Qap build-method-2 | grep -v / | tr '\n' ',' | sed 's/,$/\n/')]" | jq)
+          matrix=$(echo "[ $(ls -Qap build-method-2 | grep -v / | tr '\n' ',' | sed 's/,$/\n/')]" | jq -c .)
           echo $matrix
           echo $matrix | jq .
           echo "::set-output name=matrix::$matrix"

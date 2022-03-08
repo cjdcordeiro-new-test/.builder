@@ -10,7 +10,7 @@ jobs:
         repos: 
           - { repo: "https://github.com/cjdcordeiro-test-org/.github", name: ".github" }
           - { repo: "https://github.com/cjdcordeiro-test-org/test-repo1", name: "test-repo1" }
-    repos:
+    steps:
       - uses: actions/checkout@v2
         with:
           repository: ${{ matrix.repos.repo }}

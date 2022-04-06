@@ -7,9 +7,8 @@ jobs:
     if: ${{ !github.event.client_payload.passed }}
     runs-on: ubuntu-latest
     steps:
-    - env:
-        MESSAGE: ${{ fromJson(github.event.client_payload.event) }}
-      run: echo $MESSAGE
+    # - name: print
+    #   run: echo ${{ github.event.client_payload.event.ref }}
     - name: commit
       uses: SvanBoxel/organization-workflow@main
       with:

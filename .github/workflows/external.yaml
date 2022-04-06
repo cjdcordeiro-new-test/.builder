@@ -7,6 +7,9 @@ jobs:
     if: ${{ !github.event.client_payload.passed }}
     runs-on: ubuntu-latest
     steps:
+      - env:
+          MESSAGE: ${{ github.event.client_payload }}
+        run: echo $MESSAGE
       - uses: SvanBoxel/organization-workflow@main
         with:
           id: ${{ github.event.client_payload.id }}
@@ -14,7 +17,3 @@ jobs:
           sha: ${{ github.event.client_payload.sha }}
           run_id: ${{ github.run_id }}
           name: ${{ github.workflow }} # Default: name of workflow. This name is shown with the check, but can be changed.
-
-      - env:
-          MESSAGE: ${{ github.event.client_payload }}
-        run: echo $MESSAGE

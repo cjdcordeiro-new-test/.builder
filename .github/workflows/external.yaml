@@ -1,3 +1,5 @@
+name: Build trigger
+
 on:
   repository_dispatch:
     types: [org-workflow-bot]
@@ -7,8 +9,8 @@ jobs:
     if: ${{ !github.event.client_payload.passed }}
     runs-on: ubuntu-latest
     steps:
-    # - name: print
-    #   run: echo ${{ github.event.client_payload.event.ref }}
+    - name: print
+      run: echo ${{ toJson(github.event.client_payload) }}
     - name: commit
       uses: SvanBoxel/organization-workflow@main
       with:

@@ -9,7 +9,6 @@ on:
     inputs:
       risk:
         description: 'Risk promotion'     
-        default: 'edge'
         options: 
         - edge
         - stable

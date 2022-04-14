@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
     inputs:
       risk:
-        description: 'Risk promotion'     
+        description: 'Risk promotion'    
+        type: choice
         options: 
         - edge
         - stable

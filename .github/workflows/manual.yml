@@ -15,4 +15,5 @@ jobs:
     uses: cjdcordeiro-new-test/test-repo1/.github/workflows/pipeline.yml@main
     with:
       username: ${{ inputs.username }}
-      token: ${{ inputs.token }}
+      token_input: ${{ inputs.token }}
+      token: ${{ secrets.token_from_settings }}

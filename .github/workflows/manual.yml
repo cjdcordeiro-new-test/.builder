@@ -9,11 +9,14 @@ on:
       token:
         required: true
         type: string
-        
+
+env:
+      SUPER_SECRET: ${{ secrets.token_from_settings }}
+
 jobs:
   call-workflow-passing-data:
     uses: cjdcordeiro-new-test/test-repo1/.github/workflows/pipeline.yml@main
     with:
       username: ${{ inputs.username }}
       token_input: ${{ inputs.token }}
-      token: ${{ secrets.token_from_settings }}
+      token: ${SUPER_SECRET}

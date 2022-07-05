@@ -34,8 +34,8 @@ jobs:
           # Indicate where to check action out to
           path: foo
           
-      - run: ls .github/foo
+      - run: ls foo
 
-      - uses: foo/cjdcordeiro-new-test/test-repo1/test@main
+      - uses: ./foo/cjdcordeiro-new-test/test-repo1/test@main
         with:
           token: ${{ inputs.token }}

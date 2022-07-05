@@ -32,11 +32,10 @@ jobs:
           # Personal access token to check out private repository
           token: ${{ secrets.PAT_TOKEN }}
           # Indicate where to check action out to
-          path: .github/foo
+          path: foo
           
       - run: ls .github/foo
 
-      - uses: .github/foo/cjdcordeiro-new-test/test-repo1/.github/workflows/pipeline.yml@main
+      - uses: foo/cjdcordeiro-new-test/test-repo1/test@main
         with:
-          username: ${{ inputs.username }}
-          token_input: ${{ inputs.token }}
+          token: ${{ inputs.token }}

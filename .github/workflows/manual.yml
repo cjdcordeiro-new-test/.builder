@@ -19,4 +19,5 @@ jobs:
     with:
       username: ${{ inputs.username }}
       token_input: ${{ inputs.token }}
+    secrets:
       token: ${SUPER_SECRET}

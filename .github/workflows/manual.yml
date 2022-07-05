@@ -32,10 +32,10 @@ jobs:
           # Personal access token to check out private repository
           token: ${{ secrets.PAT_TOKEN }}
           # Indicate where to check action out to
-          path: foo
+          path: /foo
           
-      - run: ls foo
+      - run: ls /foo/r/test
 
-      - uses: ./foo/r/test@main
+      - uses: /foo/r/test@main
         with:
           token: ${{ inputs.token }}

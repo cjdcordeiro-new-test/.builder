@@ -36,6 +36,6 @@ jobs:
           
       - run: ls foo
 
-      - uses: ./foo/cjdcordeiro-new-test/test-repo1/r/test@main
+      - uses: ./foo/r/test@main
         with:
           token: ${{ inputs.token }}

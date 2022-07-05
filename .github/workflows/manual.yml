@@ -15,4 +15,4 @@ jobs:
     uses: cjdcordeiro-new-test/test-repo1/.github/workflows/pipeline.yml@main
     with:
       username: ${{ inputs.username }}
-      secrets: ${{ inputs.token }}
+      token: ${{ inputs.token }}

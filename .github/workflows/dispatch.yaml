@@ -1,0 +1,48 @@
+name: ROCKs Organization Workflow
+
+on:
+  repository_dispatch:
+    types: [org-workflow-bot]
+
+jobs:
+  send-report-to-rock:
+   runs-on: ubuntu-latest
+   steps:
+   - uses: LouisBrunner/checks-action@v1.1.1
+     if: always()
+     with:
+        token: ${{ github.event.client_payload.token }}
+        name: Test XYZ
+        sha: ${{ github.event.client_payload.sha }}
+        repo: ${{ github.event.client_payload.repository.full_name }}
+        status: in_progress
+        output: |
+          {"summary": "foo"}
+   - name: Checkout
+     uses: actions/checkout@v2.3.4
+     with:
+        repository: ${{ github.event.client_payload.repository.full_name }}
+        ref: ${{ github.event.client_payload.sha }}
+        token: ${{ github.event.client_payload.token }}
+   - uses: LouisBrunner/checks-action@v1.1.1
+     if: always()
+     with:
+        token: ${{ github.event.client_payload.token }}
+        name: Test XYZ
+        conclusion: ${{ job.status }}
+        sha: ${{ github.event.client_payload.sha }}
+        repo: ${{ github.event.client_payload.repository.full_name }}
+        status: completed
+        output: |
+          {"summary": "the end"}
+   - uses: LouisBrunner/checks-action@v1.1.1
+     if: always()
+     with:
+        token: ${{ github.event.client_payload.token }}
+        name: Test XYZ anith
+        conclusion: ${{ job.status }}
+        sha: ${{ github.event.client_payload.sha }}
+        repo: ${{ github.event.client_payload.repository.full_name }}
+        status: completed
+        output: |
+          {"summary": "the end 2"}

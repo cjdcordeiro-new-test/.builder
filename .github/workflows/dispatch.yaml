@@ -27,7 +27,7 @@ jobs:
         with:
           token: ${{ env.TOKEN }}
           name: Test XYZ
-          sha: ${{ env.SHA }}
+          sha: c2c6e1bc6c8358f58f331f153486a95f1b972267
           repo: ${{ env.REPOSITORY }}
           status: in_progress
           output: |

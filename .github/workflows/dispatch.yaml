@@ -1,6 +1,9 @@
 name: ROCKs Organization Workflow
 
 on:
+  push:
+    branches:    
+      - trunk
   repository_dispatch:
     types: [org-workflow-bot]
 

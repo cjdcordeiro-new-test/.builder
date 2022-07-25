@@ -17,8 +17,6 @@ jobs:
   rocks-ci-cd-pipeline:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-outputs@v0.0.0-fake
-        id: test
       - name: Checkout the ROCK repo (${{ env.REPOSITORY }})
         uses: actions/checkout@v3
         with:

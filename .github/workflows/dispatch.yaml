@@ -80,10 +80,9 @@ jobs:
       - name: Report the start of the ROCK CI/CD pipeline 
         uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        check_id: checks-init
         with:
           token: ${{ env.TOKEN }}
-          check_id: checks-init
+          check_id: ${{ steps.checks-init.outputs.check_id }}
           sha: ${{ env.SHA }}
           repo: ${{ env.REPOSITORY }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

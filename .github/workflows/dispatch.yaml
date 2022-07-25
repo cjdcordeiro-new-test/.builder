@@ -13,7 +13,7 @@ env:
   REPOSITORY: "${{ github.ref_name == 'trunk' && 'cjdcordeiro-new-test/mock-rock' || github.event.client_payload.repository.full_name }}"
 
 jobs:
-  checkout:
+  send-report-to-rock:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,12 +23,8 @@ jobs:
           ref: ${{ env.SHA }}
           token: ${{ env.TOKEN }}
       - run: ls
-  send-report-to-rock:
-    runs-on: ubuntu-latest
-    steps:
-      - run: ls
       - uses: LouisBrunner/checks-action@v1.1.1
-        if: env.REPOSITORY != 'ubuntu-rocks/mock-rock'  # Checks API does not work with PAT, only GH Apps
+        if: env.REPOSITORY != 'cjdcordeiro-new-test/mock-rock'  # Checks API does not work with PAT, only GH Apps
         with:
           token: ${{ env.TOKEN }}
           name: Test XYZ
@@ -38,7 +34,7 @@ jobs:
           output: |
             {"summary": "foo"}
       - uses: LouisBrunner/checks-action@v1.1.1
-        if: env.REPOSITORY != 'ubuntu-rocks/mock-rock'  # Checks API does not work with PAT, only GH Apps
+        if: env.REPOSITORY != 'cjdcordeiro-new-test/mock-rock'  # Checks API does not work with PAT, only GH Apps
         with:
           token: ${{ env.TOKEN }}
           name: Test XYZ
@@ -49,7 +45,7 @@ jobs:
           output: |
             {"summary": "the end"}
       - uses: LouisBrunner/checks-action@v1.1.1
-        if: env.REPOSITORY != 'ubuntu-rocks/mock-rock'  # Checks API does not work with PAT, only GH Apps
+        if: env.REPOSITORY != 'cjdcordeiro-new-test/mock-rock'  # Checks API does not work with PAT, only GH Apps
         with:
           token: ${{ env.TOKEN }}
           name: Test XYZ anith

@@ -49,7 +49,7 @@ jobs:
         with:
           repository: ubuntu-rocks/rocks-pipelines
           ref: main
-          token: ${{ env.TOKEN }}
+          token: ${{ secrets.SERVICE_ACCOUNT_PAT }}
           submodules: 'recursive'
           path: rocks-pipelines
           # Default: fetch-depth = 1
@@ -79,6 +79,7 @@ jobs:
       # Announce to the ROCK commit that a build has finished
       - name: Report the start of the ROCK CI/CD pipeline 
         uses: LouisBrunner/checks-action@v1.1.1
+        if: always()
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
           token: ${{ env.TOKEN }}

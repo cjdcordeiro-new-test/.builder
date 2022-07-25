@@ -15,8 +15,10 @@ env:
 
 jobs:
   rocks-ci-cd-pipeline:
+    name: ROCK CI/CD pipeline
     runs-on: ubuntu-latest
     steps:
+      # Get the ROCK commit that triggered this run
       - name: Checkout the ROCK repo (${{ env.REPOSITORY }})
         uses: actions/checkout@v3
         with:
@@ -26,6 +28,7 @@ jobs:
           submodules: 'recursive'
           # Default: fetch-depth = 1
 
+      # Announce to the ROCK commit that a build is starting
       - name: Report the start of the ROCK CI/CD pipeline 
         uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
@@ -39,25 +42,58 @@ jobs:
           status: in_progress
           output: |
             {"summary": "Building, testing and publishing a new ROCK revision for ${{ env.ROCK_NAME }}, based on the changes from ${{ env.SHA }}"}
-      - uses: LouisBrunner/checks-action@v1.1.1
+
+      # Get the ROCK CI/CD pipeline scripts
+      - name: Checkout the ROCK CI/CD pipelines repository
+        uses: actions/checkout@v3
+        with:
+          repository: ubuntu-rocks/rocks-pipelines
+          ref: main
+          token: ${{ env.TOKEN }}
+          submodules: 'recursive'
+          path: rocks-pipelines
+          # Default: fetch-depth = 1
+
+      - name: Prepare environment to run ROCKs CI/CD pipelines
+        run: pip install -r ./rocks-pipelines/src/rocks/requirements.txt
+
+      # Run ROCK preflight checks
+      - name: Run preflight checks
+        id: preflight-checks 
+        run: pip install ./rocks-pipelines/src/rocks/Preflight-Checks.sh
+
+      # Announce the preflight checks have finished
+      - name: Report the start of the ROCK CI/CD pipeline 
+        uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
           token: ${{ env.TOKEN }}
-          name: Test XYZ
-          conclusion: ${{ job.status }}
+          name: Preflight checks completed for ${{ env.ROCK_NAME }}
           sha: ${{ env.SHA }}
           repo: ${{ env.REPOSITORY }}
-          status: completed
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
-            {"summary": "the end"}
-      - uses: LouisBrunner/checks-action@v1.1.1
+            {"summary": "Preflight checks have completed with: ${{ steps.preflight-checks.outcome }}"}
+
+      # -----------------------------------------------------
+      # Announce to the ROCK commit that a build has finished
+      - name: Report the start of the ROCK CI/CD pipeline 
+        uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        id: checks-init
         with:
           token: ${{ env.TOKEN }}
-          name: Test XYZ anith
-          conclusion: ${{ job.status }}
+          check_id: checks-init
           sha: ${{ env.SHA }}
           repo: ${{ env.REPOSITORY }}
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           status: completed
-          output: |
-            {"summary": "the end 2"}
+
+  # # Wrap-up job
+  # wrap-up:
+  #   name: Wrap up after ROCK CI/CD pipeline execution
+  #   needs: rocks-ci-cd-pipeline
+  #   if: always()
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: 

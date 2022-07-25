@@ -23,17 +23,17 @@ jobs:
           ref: ${{ env.SHA }}
           token: ${{ env.TOKEN }}
       - uses: LouisBrunner/checks-action@v1.1.1
-        if: always()
+        if: env.SHA != 'channels/1.0/edge'
         with:
           token: ${{ env.TOKEN }}
           name: Test XYZ
-          sha: c2c6e1bc6c8358f58f331f153486a95f1b972267
+          sha: ${{ env.SHA }}
           repo: ${{ env.REPOSITORY }}
           status: in_progress
           output: |
             {"summary": "foo"}
       - uses: LouisBrunner/checks-action@v1.1.1
-        if: always()
+        if: env.SHA != 'channels/1.0/edge'
         with:
           token: ${{ env.TOKEN }}
           name: Test XYZ
@@ -44,7 +44,7 @@ jobs:
           output: |
             {"summary": "the end"}
       - uses: LouisBrunner/checks-action@v1.1.1
-        if: always()
+        if: env.SHA != 'channels/1.0/edge'
         with:
           token: ${{ env.TOKEN }}
           name: Test XYZ anith

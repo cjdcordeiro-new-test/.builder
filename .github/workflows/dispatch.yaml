@@ -19,38 +19,38 @@ jobs:
    - uses: LouisBrunner/checks-action@v1.1.1
      if: always()
      with:
-        token: $TOKEN
+        token: ${{ env.TOKEN }}
         name: Test XYZ
-        sha: $SHA
-        repo: "cjdcordeiro-new-test/.builder"
+        sha: ${{ env.SHA }}
+        repo: ${{ env.REPOSITORY }}
         status: in_progress
         output: |
           {"summary": "foo"}
    - name: Checkout
      uses: actions/checkout@v2.3.4
      with:
-        repository: $REPOSITORY
-        ref: $SHA
-        token: $TOKEN
+        repository: ${{ env.REPOSITORY }}
+        ref: ${{ env.SHA }}
+        token: ${{ env.TOKEN }}
    - uses: LouisBrunner/checks-action@v1.1.1
      if: always()
      with:
-        token: $TOKEN
+        token: ${{ env.TOKEN }}
         name: Test XYZ
         conclusion: ${{ job.status }}
-        sha: $SHA
-        repo: $REPOSITORY
+        sha: ${{ env.SHA }}
+        repo: ${{ env.REPOSITORY }}
         status: completed
         output: |
           {"summary": "the end"}
    - uses: LouisBrunner/checks-action@v1.1.1
      if: always()
      with:
-        token: $TOKEN
+        token: ${{ env.TOKEN }}
         name: Test XYZ anith
         conclusion: ${{ job.status }}
-        sha: $SHA
-        repo: $REPOSITORY
+        sha: ${{ env.SHA }}
+        repo: ${{ env.REPOSITORY }}
         status: completed
         output: |
           {"summary": "the end 2"}

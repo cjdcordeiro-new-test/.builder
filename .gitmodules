@@ -4,3 +4,7 @@
 [submodule "build-method-3/.github"]
 	path = build-method-3/.github
 	url = https://github.com/cjdcordeiro-test-org/.github
+[submodule "mock-rock"]
+	path = mock-rock
+	url = git@github.com:cjdcordeiro-new-test/mock-rock
+	branch = channels/1.0/edge

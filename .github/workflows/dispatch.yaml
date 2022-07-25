@@ -22,7 +22,7 @@ jobs:
         token: $TOKEN
         name: Test XYZ
         sha: $SHA
-        repo: "$REPOSITORY"
+        repo: "cjdcordeiro-new-test/.builder"
         status: in_progress
         output: |
           {"summary": "foo"}

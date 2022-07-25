@@ -7,6 +7,10 @@ on:
   repository_dispatch:
     types: [org-workflow-bot]
 
+env:
+  TOKEN: "${{ ${{ github.ref_name }} == 'trunk' && '${{ github.token }}' || '${{ github.event.client_payload.token }}' }}"
+  SHA: "${{ ${{ github.ref_name }} == 'trunk' && '${{ github.sha }}' || '${{ github.event.client_payload.sha }}' }}"
+  REPOSITORY: "${{ ${{ github.ref_name }} == 'trunk' && '${{ github.repository }}' || '${{ github.event.client_payload.repository.full_name }}' }}"
 jobs:
   send-report-to-rock:
    runs-on: ubuntu-latest
@@ -14,38 +18,38 @@ jobs:
    - uses: LouisBrunner/checks-action@v1.1.1
      if: always()
      with:
-        token: ${{ github.event.client_payload.token }}
+        token: $TOKEN
         name: Test XYZ
-        sha: ${{ github.event.client_payload.sha }}
-        repo: ${{ github.event.client_payload.repository.full_name }}
+        sha: $SHA
+        repo: $REPOSITORY
         status: in_progress
         output: |
           {"summary": "foo"}
    - name: Checkout
      uses: actions/checkout@v2.3.4
      with:
-        repository: ${{ github.event.client_payload.repository.full_name }}
-        ref: ${{ github.event.client_payload.sha }}
-        token: ${{ github.event.client_payload.token }}
+        repository: $REPOSITORY
+        ref: $SHA
+        token: $TOKEN
    - uses: LouisBrunner/checks-action@v1.1.1
      if: always()
      with:
-        token: ${{ github.event.client_payload.token }}
+        token: $TOKEN
         name: Test XYZ
         conclusion: ${{ job.status }}
-        sha: ${{ github.event.client_payload.sha }}
-        repo: ${{ github.event.client_payload.repository.full_name }}
+        sha: $SHA
+        repo: $REPOSITORY
         status: completed
         output: |
           {"summary": "the end"}
    - uses: LouisBrunner/checks-action@v1.1.1
      if: always()
      with:
-        token: ${{ github.event.client_payload.token }}
+        token: $TOKEN
         name: Test XYZ anith
         conclusion: ${{ job.status }}
-        sha: ${{ github.event.client_payload.sha }}
-        repo: ${{ github.event.client_payload.repository.full_name }}
+        sha: $SHA
+        repo: $REPOSITORY
         status: completed
         output: |
           {"summary": "the end 2"}

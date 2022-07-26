@@ -6,20 +6,8 @@ jobs:
   check_for_rock_updates:
     runs-on: ubuntu-latest
     outputs:
-      app_token: ${{ steps.get_token.outputs.app_token }}
       triggers: ${{ steps.generate-matrix.outputs.triggers }}
     steps:
-      - name: Get token
-        id: get_token
-        uses: machine-learning-apps/actions-app-token@master
-        with:
-          APP_PEM: ${{ secrets.APP_PEM }}
-          APP_ID: ${{ secrets.APP_ID }}
-
-      - name: Save App Installation Token
-        run: |
-          echo '::set-output name=app_token::${{ steps.get_token.outputs.app_token }}'
-
       - name: Generate matrix
         id: generate-matrix
         run: |
@@ -30,5 +18,4 @@ jobs:
     uses: cjdcordeiro-new-test/.builder/.github/workflows/rocks-pipeline.yml@main # TODO ubuntu-rocks/.build/.github/workflows/rocks-pipeline.yml@main
     with:
       matrix_combinations: ${{ needs.check_for_rock_updates.outputs.triggers }}
-    secrets:
-      token: ${{ needs.check_for_rock_updates.outputs.app_token }}
+    secrets: inherit

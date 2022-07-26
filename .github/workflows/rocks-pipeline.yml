@@ -22,13 +22,21 @@ jobs:
       matrix: 
         rock: ${{ fromJSON(inputs.matrix_combinations) }}
     steps:
+      # Fetch GH App token for performing org operation during the pipeline
+      - name: Get token for Organization Workflow
+        id: get_token
+        uses: machine-learning-apps/actions-app-token@master
+        with:
+          APP_PEM: ${{ secrets.APP_PEM }}
+          APP_ID: ${{ secrets.APP_ID }}
+
       # Get the ROCK commit that triggered this run
       - name: Checkout the ROCK repo (${{ matrix.rock.full_name }})
         uses: actions/checkout@v3
         with:
           repository: ${{ matrix.rock.full_name }}
           ref: ${{ matrix.rock.sha }}
-          token: ${{ secrets.token }}
+          token: ${{ steps.get_token.outputs.app_token }}
           submodules: 'recursive'
           # Default: fetch-depth = 1
 
@@ -38,7 +46,7 @@ jobs:
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         id: checks-init
         with:
-          token: ${{ secrets.token }}
+          token: ${{ steps.get_token.outputs.app_token }}
           name: Running CI/CD for ROCK ${{ matrix.rock.name }}
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
@@ -53,7 +61,7 @@ jobs:
         with:
           repository: ubuntu-rocks/rocks-pipelines
           ref: rocks-ci   # TODO: main
-          token: ${{ secrets.token }}   # TODO may not need: ${{ secrets.SERVICE_ACCOUNT_PAT }}
+          token: ${{ steps.get_token.outputs.app_token }}   # TODO may not need: ${{ secrets.SERVICE_ACCOUNT_PAT }}
           submodules: 'recursive'
           path: rocks-pipelines
           # Default: fetch-depth = 1
@@ -71,7 +79,7 @@ jobs:
         uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
-          token: ${{ secrets.token }}
+          token: ${{ steps.get_token.outputs.app_token }}
           name: Preflight checks completed for ${{ matrix.rock.name }}
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
@@ -86,7 +94,7 @@ jobs:
         if: always()
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
-          token: ${{ secrets.token }}
+          token: ${{ steps.get_token.outputs.app_token }}
           check_id: ${{ steps.checks-init.outputs.check_id }}
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}

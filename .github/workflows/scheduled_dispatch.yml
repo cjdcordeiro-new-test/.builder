@@ -32,4 +32,5 @@ jobs:
     uses: cjdcordeiro-new-test/.builder/.github/workflows/rocks-pipeline.yml@main # TODO ubuntu-rocks/.build/.github/workflows/rocks-pipeline.yml@main
     with:
       matrix_combinations: ${{ needs.check_for_rock_updates.outputs.triggers }}
+    secrets:
       token: ${{ needs.check_for_rock_updates.outputs.app_token }}

@@ -38,4 +38,4 @@ jobs:
     steps:
       - name: Matrix => (${{ matrix.trigger }}
         run: |
-          echo ${{ matrix.trigger }}
+          echo ${{ matrix.trigger.full_name }} ${{ matrix.trigger.sha }}

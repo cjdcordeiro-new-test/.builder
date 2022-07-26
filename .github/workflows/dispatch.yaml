@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: ubuntu-rocks/rocks-pipelines
-          ref: main
+          ref: rocks-ci   # TODO: main
           token: ${{ secrets.SERVICE_ACCOUNT_PAT }}
           submodules: 'recursive'
           path: rocks-pipelines
@@ -63,7 +63,7 @@ jobs:
         run: pip install ./rocks-pipelines/src/rocks/Preflight-Checks.sh
 
       # Announce the preflight checks have finished
-      - name: Report the start of the ROCK CI/CD pipeline 
+      - name: Report that preflight checks have ended 
         uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
@@ -77,7 +77,7 @@ jobs:
 
       # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished
-      - name: Report the start of the ROCK CI/CD pipeline 
+      - name: Report the end of the ROCK CI/CD pipeline 
         uses: LouisBrunner/checks-action@v1.1.1
         if: always()
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
@@ -88,6 +88,7 @@ jobs:
           repo: ${{ env.REPOSITORY }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           status: completed
+          conclusion: ${{ job.status }}
 
   # # Wrap-up job
   # wrap-up:

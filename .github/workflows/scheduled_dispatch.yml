@@ -29,7 +29,7 @@ jobs:
 
   trigger_rock_ci_cd: 
     needs: check_for_rock_updates
-    uses: cjdcordeiro-new-test/.builder/.github/.workflows/rocks-pipeline.yml@main # TODO ubuntu-rocks/.build/.github/workflows/rocks-pipeline.yml@main
+    uses: cjdcordeiro-new-test/.builder/.github/workflows/rocks-pipeline.yml@main # TODO ubuntu-rocks/.build/.github/workflows/rocks-pipeline.yml@main
     with:
       matrix_combinations: ${{ needs.check_for_rock_updates.outputs.triggers }}
       token: ${{ needs.check_for_rock_updates.outputs.app_token }}

@@ -23,12 +23,7 @@ jobs:
           TOKEN: ${{ steps.get_token.outputs.app_token }}
 
       - name: Generate matrix
-        run: |
-          MATRIX_PARAMS_COMBINATIONS='
-              {"trigger": "cjdcordeiro-new-test/mock-rock:03b0b87fb0879276dc47248d1674fd6244ea8008"},
-              {"trigger": "cjdcordeiro-new-test/mock-rock:635e12a96729770a891309170ce72634cac28b4c"}
-          '
-          echo ::set-output name=triggers::{\"include\":[$MATRIX_PARAMS_COMBINATIONS]}
+        run: echo "::set-output name=triggers::['cjdcordeiro-new-test/mock-rock:03b0b87fb0879276dc47248d1674fd6244ea8008', 'cjdcordeiro-new-test/mock-rock:635e12a96729770a891309170ce72634cac28b4c']"
 
 
   run: 

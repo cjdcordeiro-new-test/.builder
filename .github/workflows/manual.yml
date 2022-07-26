@@ -1,41 +1,28 @@
-name: Reusable workflow example
+name: sched
 
-on:
-  workflow_dispatch:
-    inputs:
-      username:
-        required: true
-        type: string
-      token:
-        required: true
-        type: string
-
-env:
-      SUPER_SECRET: ${{ secrets.token_from_settings }}
+on: [push]
 
 jobs:
   do-it:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Run a one-line script
-        run: echo Hello, world!
-        
-      - name: Get composite run steps repository
-        uses: actions/checkout@v2
+      - name: Get token
+        id: get_token
+        uses: machine-learning-apps/actions-app-token@master
         with:
-          repository: cjdcordeiro-new-test/test-repo1
-          # Select revision
-          ref: main
-          # Personal access token to check out private repository
-          token: ${{ secrets.PAT_TOKEN }}
-          # Indicate where to check action out to
-          path: foo
-          
-      - run: ls foo/r/test
+          APP_PEM: ${{ secrets.APP_PEM }}
+          APP_ID: ${{ secrets.APP_ID }}
 
-      - uses: ./foo/r/test
+      - name: Get App Installation Token
+        run: |
+          echo "This token is masked: ${TOKEN}"
+        env:
+          TOKEN: ${{ steps.get_token.outputs.app_token }}
+
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ inputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: cjdc
+          client-payload: '{"name": "mock-rock", "full_name": "cjdcordeiro-new-test/mock-rock", "token": "${{ steps.get_token.outputs.app_token }}", "sha": "03b0b87fb0879276dc47248d1674fd6244ea8008"}'

@@ -1,9 +1,9 @@
-name: sched
+name: sched  # TODO change name
 
-on: [push]
+on: [push]  # TODO change to schedule
 
 jobs:
-  do_it:
+  check_for_rock_updates:
     runs-on: ubuntu-latest
     outputs:
       app_token: ${{ steps.get_token.outputs.app_token }}
@@ -27,15 +27,9 @@ jobs:
         run: |
           echo '::set-output name=triggers::[{"full_name": "cjdcordeiro-new-test/mock-rock", "name": "mock-rock", "sha": "03b0b87fb0879276dc47248d1674fd6244ea8008"}, {"full_name": "cjdcordeiro-new-test/mock-rock", "name": "mock-rock", "sha": "635e12a96729770a891309170ce72634cac28b4c"}]'
 
-
-
-  run: 
-    runs-on: ubuntu-latest
-    needs: do_it 
-    strategy:
-      matrix: 
-        trigger: ${{ fromJSON(needs.do_it.outputs.triggers) }}
-    steps:
-      - name: Matrix => (${{ matrix.trigger }}
-        run: |
-          echo ${{ matrix.trigger.full_name }} ${{ matrix.trigger.sha }}
+  trigger_rock_ci_cd: 
+    needs: check_for_rock_updates
+    uses: cjdcordeiro-new-test/.builder/.github/.workflows/rocks-pipeline.yml@main # TODO ubuntu-rocks/.build/.github/workflows/rocks-pipeline.yml@main
+    with:
+      matrix_combinations: ${{ needs.check_for_rock_updates.outputs.triggers }}
+      token: ${{ needs.check_for_rock_updates.outputs.app_token }}

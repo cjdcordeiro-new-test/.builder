@@ -3,13 +3,11 @@ name: ROCKs Organization Workflow
 on:
   workflow_call:
     inputs:
-      sha:
-        required: true
-        type: string
-      name:
-        required: true
-        type: string
-      full_name:
+      # Expects a list of combinations, referring to all the ROCKs to be built
+      # This value is later on given to a "matrix"
+      # The expected format is:
+      #   [{'full_name': <ubuntu-rocks/repo>, 'name': <repo>, 'sha': <commit>}, ...]
+      matrix_combinations:
         required: true
         type: string
     secrets:
@@ -20,6 +18,9 @@ jobs:
   rocks-ci-cd-pipeline:
     name: ROCK CI/CD pipeline
     runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        trigger: ${{ fromJSON(inputs.matrix_combinations) }}
     steps:
       # Get the ROCK commit that triggered this run
       - name: Checkout the ROCK repo (${{ inputs.full_name }})

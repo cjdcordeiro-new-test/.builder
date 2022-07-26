@@ -10,9 +10,6 @@ on:
       matrix_combinations:
         required: true
         type: string
-    secrets:
-      token:
-        required: true
 
 jobs:
   rocks-ci-cd-pipeline:

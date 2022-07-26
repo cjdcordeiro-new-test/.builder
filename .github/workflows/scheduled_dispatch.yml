@@ -16,11 +16,9 @@ jobs:
           APP_PEM: ${{ secrets.APP_PEM }}
           APP_ID: ${{ secrets.APP_ID }}
 
-      - name: Get App Installation Token
+      - name: Save App Installation Token
         run: |
-          echo "This token is masked: ${TOKEN}"
-        env:
-          TOKEN: ${{ steps.get_token.outputs.app_token }}
+          echo '::set-output name=app_token::${{ steps.get_token.outputs.app_token }}'
 
       - name: Generate matrix
         id: generate-matrix

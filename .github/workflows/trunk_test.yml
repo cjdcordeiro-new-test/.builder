@@ -1,4 +1,4 @@
-name: sched
+name: trunk
 
 on: [push]
 

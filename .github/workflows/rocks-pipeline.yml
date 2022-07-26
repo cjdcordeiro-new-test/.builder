@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        rock: ${{ fromJSON(matrix.rock.matrix_combinations) }}
+        rock: ${{ fromJSON(inputs.matrix_combinations) }}
     steps:
       # Get the ROCK commit that triggered this run
       - name: Checkout the ROCK repo (${{ matrix.rock.full_name }})

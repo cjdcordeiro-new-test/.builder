@@ -53,7 +53,7 @@ jobs:
         with:
           repository: ubuntu-rocks/rocks-pipelines
           ref: rocks-ci   # TODO: main
-          token:    # TODO may not need: ${{ secrets.SERVICE_ACCOUNT_PAT }}
+          token: ${{ secrets.token }}   # TODO may not need: ${{ secrets.SERVICE_ACCOUNT_PAT }}
           submodules: 'recursive'
           path: rocks-pipelines
           # Default: fetch-depth = 1

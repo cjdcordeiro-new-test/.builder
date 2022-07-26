@@ -24,16 +24,18 @@ jobs:
 
       - name: Generate matrix
         run: |
-          MATRIX="[\"cjdcordeiro-new-test/mock-rock:03b0b87fb0879276dc47248d1674fd6244ea8008\", \"cjdcordeiro-new-test/mock-rock:635e12a96729770a891309170ce72634cac28b4c\"]"
-          echo ::set-output name=triggers::${MATRIX}
+          MATRIX_PARAMS_COMBINATIONS='
+              {"trigger": "cjdcordeiro-new-test/mock-rock:03b0b87fb0879276dc47248d1674fd6244ea8008"},
+              {"trigger": "cjdcordeiro-new-test/mock-rock:635e12a96729770a891309170ce72634cac28b4c"}
+          '
+          echo ::set-output name=triggers::{\"include\":[$MATRIX_PARAMS_COMBINATIONS]}
 
 
   run: 
     runs-on: ubuntu-latest
     needs: do_it 
     strategy:
-      matrix:
-        trigger: ${{ fromJSON(needs.do_it.outputs.triggers) }}
+      matrix: ${{ fromJSON(needs.do_it.outputs.triggers) }}
     steps:
       - name: Matrix => (${{ matrix.trigger }}
         run: |

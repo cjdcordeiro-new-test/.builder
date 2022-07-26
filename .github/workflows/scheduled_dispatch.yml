@@ -1,0 +1,41 @@
+name: sched
+
+on: [push]
+
+jobs:
+  do_it:
+    runs-on: ubuntu-latest
+    outputs:
+      app_token: ${{ steps.get_token.outputs.app_token }}
+      triggers: ${{ steps.generate-matrix.outputs.triggers }}
+    steps:
+      - name: Get token
+        id: get_token
+        uses: machine-learning-apps/actions-app-token@master
+        with:
+          APP_PEM: ${{ secrets.APP_PEM }}
+          APP_ID: ${{ secrets.APP_ID }}
+
+      - name: Get App Installation Token
+        run: |
+          echo "This token is masked: ${TOKEN}"
+        env:
+          TOKEN: ${{ steps.get_token.outputs.app_token }}
+
+      - name: Generate matrix
+        id: generate-matrix
+        run: |
+          echo '::set-output name=triggers::[{"full_name": "cjdcordeiro-new-test/mock-rock", "name": "mock-rock", "sha": "03b0b87fb0879276dc47248d1674fd6244ea8008"}, {"full_name": "cjdcordeiro-new-test/mock-rock", "name": "mock-rock", "sha": "635e12a96729770a891309170ce72634cac28b4c"}]'
+
+
+
+  run: 
+    runs-on: ubuntu-latest
+    needs: do_it 
+    strategy:
+      matrix: 
+        trigger: ${{ fromJSON(needs.do_it.outputs.triggers) }}
+    steps:
+      - name: Matrix => (${{ matrix.trigger }}
+        run: |
+          echo ${{ matrix.trigger }}

@@ -1,17 +1,20 @@
 name: ROCKs Organization Workflow
 
 on:
-  push:
-    branches:
-      - trunk
-  repository_dispatch:
-    types: [org-workflow-bot, cjdc]
-
-env:
-  TOKEN: "${{ github.ref_name == 'trunk' && secrets.SERVICE_ACCOUNT_PAT || github.event.client_payload.token }}"
-  SHA: "${{ github.ref_name == 'trunk' && 'channels/1.0/edge' || github.event.client_payload.sha }}"
-  REPOSITORY: "${{ github.ref_name == 'trunk' && 'cjdcordeiro-new-test/mock-rock' || github.event.client_payload.repository.full_name }}"
-  ROCK_NAME: "${{ github.ref_name == 'trunk' && 'mock-rock' || github.event.client_payload.repository.name }}"
+  workflow_call:
+    inputs:
+      sha:
+        required: true
+        type: string
+      name:
+        required: true
+        type: string
+      full_name:
+        required: true
+        type: string
+    secrets:
+      token:
+        required: true
 
 jobs:
   rocks-ci-cd-pipeline:
@@ -19,12 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Get the ROCK commit that triggered this run
-      - name: Checkout the ROCK repo (${{ env.REPOSITORY }})
+      - name: Checkout the ROCK repo (${{ inputs.full_name }})
         uses: actions/checkout@v3
         with:
-          repository: ${{ env.REPOSITORY }}
-          ref: ${{ env.SHA }}
-          token: ${{ env.TOKEN }}
+          repository: ${{ inputs.full_name }}
+          ref: ${{ inputs.sha }}
+          token: ${{ secrets.token }}
           submodules: 'recursive'
           # Default: fetch-depth = 1
 
@@ -34,14 +37,14 @@ jobs:
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         id: checks-init
         with:
-          token: ${{ env.TOKEN }}
-          name: Running CI/CD for ROCK ${{ env.ROCK_NAME }}
-          sha: ${{ env.SHA }}
-          repo: ${{ env.REPOSITORY }}
+          token: ${{ secrets.token }}
+          name: Running CI/CD for ROCK ${{ inputs.name }}
+          sha: ${{ inputs.sha }}
+          repo: ${{ inputs.full_name }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           status: in_progress
           output: |
-            {"summary": "Building, testing and publishing a new ROCK revision for ${{ env.ROCK_NAME }}, based on the changes from ${{ env.SHA }}"}
+            {"summary": "Building, testing and publishing a new ROCK revision for ${{ inputs.name }}, based on the changes from ${{ inputs.sha }}"}
 
       # Get the ROCK CI/CD pipeline scripts
       - name: Checkout the ROCK CI/CD pipelines repository
@@ -49,7 +52,7 @@ jobs:
         with:
           repository: ubuntu-rocks/rocks-pipelines
           ref: rocks-ci   # TODO: main
-          token: ${{ secrets.SERVICE_ACCOUNT_PAT }}
+          token:    # TODO may not need: ${{ secrets.SERVICE_ACCOUNT_PAT }}
           submodules: 'recursive'
           path: rocks-pipelines
           # Default: fetch-depth = 1
@@ -67,10 +70,10 @@ jobs:
         uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
-          token: ${{ env.TOKEN }}
-          name: Preflight checks completed for ${{ env.ROCK_NAME }}
-          sha: ${{ env.SHA }}
-          repo: ${{ env.REPOSITORY }}
+          token: ${{ secrets.token }}
+          name: Preflight checks completed for ${{ inputs.name }}
+          sha: ${{ inputs.sha }}
+          repo: ${{ inputs.full_name }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "Preflight checks have completed with: ${{ steps.preflight-checks.outcome }}"}
@@ -82,10 +85,10 @@ jobs:
         if: always()
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
-          token: ${{ env.TOKEN }}
+          token: ${{ secrets.token }}
           check_id: ${{ steps.checks-init.outputs.check_id }}
-          sha: ${{ env.SHA }}
-          repo: ${{ env.REPOSITORY }}
+          sha: ${{ inputs.sha }}
+          repo: ${{ inputs.full_name }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           status: completed
           conclusion: ${{ job.status }}

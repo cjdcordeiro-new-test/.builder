@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        rock: ${{ fromJSON(rock.matrix_combinations) }}
+        rock: ${{ fromJSON(matrix.rock.matrix_combinations) }}
     steps:
       # Get the ROCK commit that triggered this run
-      - name: Checkout the ROCK repo (${{ rock.full_name }})
+      - name: Checkout the ROCK repo (${{ matrix.rock.full_name }})
         uses: actions/checkout@v3
         with:
-          repository: ${{ rock.full_name }}
-          ref: ${{ rock.sha }}
+          repository: ${{ matrix.rock.full_name }}
+          ref: ${{ matrix.rock.sha }}
           token: ${{ secrets.token }}
           submodules: 'recursive'
           # Default: fetch-depth = 1
@@ -39,13 +39,13 @@ jobs:
         id: checks-init
         with:
           token: ${{ secrets.token }}
-          name: Running CI/CD for ROCK ${{ rock.name }}
-          sha: ${{ rock.sha }}
-          repo: ${{ rock.full_name }}
+          name: Running CI/CD for ROCK ${{ matrix.rock.name }}
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           status: in_progress
           output: |
-            {"summary": "Building, testing and publishing a new ROCK revision for ${{ rock.name }}, based on the changes from ${{ rock.sha }}"}
+            {"summary": "Building, testing and publishing a new ROCK revision for ${{ matrix.rock.name }}, based on the changes from ${{ matrix.rock.sha }}"}
 
       # Get the ROCK CI/CD pipeline scripts
       - name: Checkout the ROCK CI/CD pipelines repository
@@ -72,9 +72,9 @@ jobs:
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
           token: ${{ secrets.token }}
-          name: Preflight checks completed for ${{ rock.name }}
-          sha: ${{ rock.sha }}
-          repo: ${{ rock.full_name }}
+          name: Preflight checks completed for ${{ matrix.rock.name }}
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "Preflight checks have completed with: ${{ steps.preflight-checks.outcome }}"}
@@ -88,8 +88,8 @@ jobs:
         with:
           token: ${{ secrets.token }}
           check_id: ${{ steps.checks-init.outputs.check_id }}
-          sha: ${{ rock.sha }}
-          repo: ${{ rock.full_name }}
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           status: completed
           conclusion: ${{ job.status }}

@@ -27,7 +27,7 @@ jobs:
 
   build-rocks:
     needs: check-for-updated-rock-projects
-    if: ${{ toJson(needs.check-for-updated-rock-projects.outputs.triggers) != "[]" }}
+    if: toJson(needs.check-for-updated-rock-projects.outputs.triggers) != '[]'
     uses: cjdcordeiro-new-test/.builder/.github/workflows/rocks-pipeline.yml@main # TODO ubuntu-rocks/.build/.github/workflows/rocks-pipeline.yml@main
     with:
       matrix_combinations: ${{ needs.check-for-updated-rock-projects.outputs.triggers }}
@@ -35,7 +35,7 @@ jobs:
 
   queue-rocks:
     needs: check-for-updated-rock-projects
-    if: ${{ toJson(needs.check-for-updated-rock-projects.outputs.queue) != "[]" }}
+    if: toJson(needs.check-for-updated-rock-projects.outputs.queue) != '[]'
     name: Put ROCKs on build queue
     runs-on: ubuntu-latest
     strategy:

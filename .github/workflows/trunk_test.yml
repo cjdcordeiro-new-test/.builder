@@ -1,6 +1,9 @@
 name: trunk
 
-on: [push]
+on: 
+  push:
+    branches:
+    - trunk
 
 jobs:
   do_it:

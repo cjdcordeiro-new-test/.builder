@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        rock: ${{ fromJSON(needs.check-for-updated-rock-projects.outputs.queue) }}
+        rock: ${{ fromJSON(needs.check-for-updated-rock-projects.outputs.triggers) }}
     steps:
       # Fetch GH App token for performing org operation during the pipeline
       - name: Get token for Organization Workflow

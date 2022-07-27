@@ -16,6 +16,13 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+      # Fetch GH App token for performing org operation during the pipeline
+      - name: Get token for Organization Workflow
+        id: get_token
+        uses: machine-learning-apps/actions-app-token@master
+        with:
+          APP_PEM: ${{ secrets.APP_PEM }}
+          APP_ID: ${{ secrets.APP_ID }}
       - name: Generate matrix
         id: generate-build-matrix
         run: |
@@ -23,7 +30,7 @@ jobs:
           # Set defaults for outputs
           echo "::set-output name=triggers::[]"
           echo "::set-output name=queue::[]"
-          ./check-for-updated-rock-projects-dev.py # TODO: remove -dev
+          ./check-for-updated-rock-projects-dev.py --token ${{ steps.get_token.outputs.app_token }} --workflow ${{ github.workflow }} # TODO: remove -dev
 
   build-rocks:
     needs: check-for-updated-rock-projects

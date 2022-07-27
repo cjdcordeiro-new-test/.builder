@@ -44,7 +44,7 @@ jobs:
         id: checks-build-start
         with:
           token: ${{ steps.get_token.outputs.app_token }}
-          name: Building ROCK for ${{ matrix.rock.sha }} on ${{ matrix.rock.branch }}
+          name: Building ROCK on ${{ matrix.rock.branch }}
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

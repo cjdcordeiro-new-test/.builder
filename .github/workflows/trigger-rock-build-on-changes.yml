@@ -42,7 +42,7 @@ jobs:
 
   queue-rocks:
     needs: check-for-updated-rock-projects
-    if: needs.check-for-updated-rock-projects.outputs.queue != '[]'
+    if: needs.check-for-updated-rock-projects.outputs.queue == '[]'
     name: Put ROCKs on build queue
     runs-on: ubuntu-latest
     strategy:

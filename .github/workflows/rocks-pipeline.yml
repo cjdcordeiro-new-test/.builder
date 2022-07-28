@@ -66,6 +66,7 @@ jobs:
       - name: Prepare environment to run ROCKs CI/CD pipelines
         run: pip install -r ./rocks-pipelines/src/rocks/requirements.txt
 
+      #### PREFLIGHT
       # Run ROCK preflight checks
       - name: Run preflight checks
         id: preflight-checks 
@@ -83,6 +84,30 @@ jobs:
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "Preflight checks have completed with: ${{ steps.preflight-checks.outcome }}"}
+
+      #### DETERMINE REVISION NUMBER
+      # Get the next revision number for all ROCKs in this project
+      - name: Determine ROCKs revision numbers
+        id: determine-revision
+        run: |
+          ./rocks-pipelines/src/rocks/Determine-Revision-Numbers.py
+          for rev in `ls *-revision`
+          do
+            echo "${rev}: $(cat $rev)"
+          done
+
+      # Announce the revision numbers are known
+      - name: Report that the revision numbers have been determined
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Revision numbers determined
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          output: |
+            {"summary": "The revision numbers for the ROCKs in this commit have been determined: ${{ steps.determine-revision.outcome }}"}
 
       # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished

@@ -42,12 +42,12 @@ jobs:
 
   queue-rocks:
     needs: check-for-updated-rock-projects
-    if: needs.check-for-updated-rock-projects.outputs.queue == '[]'
+    if: needs.check-for-updated-rock-projects.outputs.queue != '[]'
     name: Put ROCKs on build queue
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        rock: ${{ fromJSON(needs.check-for-updated-rock-projects.outputs.triggers) }}
+        rock: ${{ fromJSON(needs.check-for-updated-rock-projects.outputs.queue) }}
     steps:
       # Fetch GH App token for performing org operation during the pipeline
       - name: Get token for Organization Workflow

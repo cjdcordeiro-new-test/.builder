@@ -85,7 +85,7 @@ jobs:
           conclusion: success
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
-            {"summary": "Preflight checks have completed with: ${{ steps.preflight-checks.outcome }}"}
+            {"summary": "Preflight checks have completed with ${{ steps.preflight-checks.outcome }}"}
 
       #### DETERMINE REVISION NUMBER
       # Get the next revision number for all ROCKs in this project
@@ -110,7 +110,7 @@ jobs:
           conclusion: success
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
-            {"summary": "The revision numbers for the ROCKs in this commit have been determined: ${{ steps.determine-revision.outcome }}"}
+            {"summary": "The revision numbers for the ROCKs in this commit have been determined with ${{ steps.determine-revision.outcome }}"}
 
       # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished

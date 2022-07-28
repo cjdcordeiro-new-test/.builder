@@ -156,6 +156,7 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
         run: |
+          docker buildx create --use
           for rockcraft_yaml in `ls rockcraft.*.y[[:alnum:]]ml`
           do
             ./rocks-pipelines/src/rocks/Build.py --rockcraft-yaml "${rockcraft_yaml}" --risk ${{ steps.infer-risk.outputs.risk }}

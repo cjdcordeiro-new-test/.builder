@@ -90,9 +90,9 @@ jobs:
       #### DETERMINE REVISION NUMBER
       # Get the next revision number for all ROCKs in this project
       - name: Determine ROCKs revision numbers
-        id: determine-revision
+        id: determine-revisions
         run: |
-          ./rocks-pipelines/src/rocks/Determine-Revision-Numbers.py
+          ./rocks-pipelines/src/rocks/Determine-Revisions.py
           for rev in `ls *-revision`
           do
             echo "${rev}: $(cat $rev)"
@@ -110,7 +110,7 @@ jobs:
           conclusion: success
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
-            {"summary": "The revision numbers for the ROCKs in this commit have been determined with ${{ steps.determine-revision.outcome }}"}
+            {"summary": "The revision numbers for the ROCKs in this commit have been determined with ${{ steps.determine-revisions.outcome }}"}
 
       # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished

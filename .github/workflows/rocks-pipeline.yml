@@ -16,6 +16,7 @@ jobs:
     name: ROCK CI/CD build pipeline
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix: 
         rock: ${{ fromJSON(inputs.matrix_combinations) }}
     steps:

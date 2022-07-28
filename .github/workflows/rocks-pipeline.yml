@@ -79,7 +79,7 @@ jobs:
         continue-on-error: true   # Checks API does not work with PAT, only GH Apps
         with:
           token: ${{ steps.get_token.outputs.app_token }}
-          name: Preflight checks completed for ${{ matrix.rock.sha }} on ${{ matrix.rock.branch }}
+          name: Preflight checks completed
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
           conclusion: success
@@ -87,12 +87,49 @@ jobs:
           output: |
             {"summary": "Preflight checks have completed with ${{ steps.preflight-checks.outcome }}"}
 
+      #### INFER RISK
+      # Get the risk for this ROCK
+      - name: Infer risk
+        id: infer-risk 
+        uses: jannekem/run-python-script-action@v1
+        with:
+          script: |
+            branch = ${{ matrix.rock.branch }}
+            # expected format is channels/<track>/<risk>/<...>
+            supported_risks = ["edge", "beta", "candidate", "stable"]
+            try:
+              risk = branch.split("/")[2]
+            except IndexError:
+              # this means a risk was not provided
+              # default to "edge"
+              risk = "edge"
+            
+            if risk in supported_risks:
+              print(f"::set-output name=risk::{risk}")
+            else:
+              raise Exception(f"Inferred unsupported risk {risk} from branch name {branch}.\
+                Supported risks are: {supported_risks}")
+
+      # Announce the inferred risk
+      - name: Report the inferred risk
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Inferred risk = ${{ steps.infer-risk.outputs.risk }}
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          output: |
+            {"summary": "Building ROCK for risk '${{ steps.infer-risk.outputs.risk }}' (based on channel name ${{ matrix.rock.branch }})"}
+
       #### DETERMINE REVISION NUMBER
       # Get the next revision number for all ROCKs in this project
       - name: Determine ROCKs revision numbers
         id: determine-revisions
         run: |
-          ./rocks-pipelines/src/rocks/Determine-Revisions.py
+          ./rocks-pipelines/src/rocks/Determine-Revisions.py --project-dir "${{ github.workspace }}"
           for rev in `ls *-revision`
           do
             echo "${rev}: $(cat $rev)"
@@ -111,6 +148,33 @@ jobs:
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "The revision numbers for the ROCKs in this commit have been determined with ${{ steps.determine-revisions.outcome }}"}
+
+      #### BUILD
+      # Build all ROCKs in this ROCK project/repo
+      - name: Build ROCKs
+        id: build-rocks
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          for rockcraft_yaml in `ls rockcraft.*.y[[:alnum:]]ml`
+          do
+            ./rocks-pipelines/src/rocks/Build.py --rockcraft-yaml "${rockcraft_yaml}" --risk ${{ steps.infer-risk.outputs.risk }}
+          done
+          echo "::set-output name=oci-archives::'$(ls *.rock)'"
+
+      # Announce the build was successful
+      - name: Report that the build was successful
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: ROCKs builds successful
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          output: |
+            {"summary": "Successfully built and produced the following ROCKs OCI archives: ${{ steps.build-rocks.outputs.oci-archives }}"}
 
       # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished

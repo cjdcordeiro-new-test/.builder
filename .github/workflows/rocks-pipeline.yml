@@ -94,7 +94,7 @@ jobs:
         uses: jannekem/run-python-script-action@v1
         with:
           script: |
-            branch = "${{ matrix.rock.branch }}""
+            branch = "${{ matrix.rock.branch }}"
             # expected format is channels/<track>/<risk>/<...>
             supported_risks = ["edge", "beta", "candidate", "stable"]
             try:

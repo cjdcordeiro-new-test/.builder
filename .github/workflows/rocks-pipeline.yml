@@ -82,6 +82,7 @@ jobs:
           name: Preflight checks completed for ${{ matrix.rock.sha }} on ${{ matrix.rock.branch }}
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
+          conclusion: success
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "Preflight checks have completed with: ${{ steps.preflight-checks.outcome }}"}
@@ -106,6 +107,7 @@ jobs:
           name: Revision numbers determined
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
+          conclusion: success
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "The revision numbers for the ROCKs in this commit have been determined: ${{ steps.determine-revision.outcome }}"}

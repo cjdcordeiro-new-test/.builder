@@ -185,7 +185,7 @@ jobs:
         run: |
           for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
           do
-            ./rocks-pipelines/src/rocks/Black-Box-Test.py --rock-oci-archive "${rock_oci_archive}"
+            ./rocks-pipelines/src/rocks/tests/Black-Box-Test.py --rock-oci-archive "${rock_oci_archive}"
           done
 
       # Announce the Black-box-testing was successful

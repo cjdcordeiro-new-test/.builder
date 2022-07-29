@@ -204,6 +204,27 @@ jobs:
 
 
       # -----------------------------------------------------
+      # Get the corresponding URL of the check_run
+      - name: Get check_run ID for project
+        if: always()
+        id: check-run-id 
+        uses: jannekem/run-python-script-action@v1
+        continue-on-error: true
+        with:
+          script: |
+            import requests
+            import json
+
+            headers = {
+              "Accept": "application/vnd.github+json",
+              "Authorization": f"token ${{ github.token }}"
+            }
+            url = ${{ github.server_url }}/${{ github.repository }}/commits/${{ github.sha }}/check-runs
+            check_runs = requests.get(url, headers=headers, params={"filter": "latest"}).json()
+            for cr in check_runs["check_runs"]:
+              if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}" in cr["name"]:
+                print(f"::set-output name=rock-build-id::{cr['id']}")
+
       # Announce to the ROCK commit that a build has finished
       - name: Report the end of the ROCK CI/CD pipeline 
         uses: LouisBrunner/checks-action@v1.1.1
@@ -217,6 +238,10 @@ jobs:
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           status: completed
           conclusion: ${{ job.status }}
+          output: |
+            {"summary": "The CI/CD pipeline for the ${{ matrix.rock.full_name }} ROCKs project, on commit ${{ matrix.rock.sha }} of branch ${{ matrix.rock.branch }} has finished with '${{ job.status }}'. \
+             You can view the build logs at ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}"}
+
 
   # # Wrap-up job
   # wrap-up:

@@ -161,7 +161,7 @@ jobs:
           do
             ./rocks-pipelines/src/rocks/Build.py --rockcraft-yaml "${rockcraft_yaml}" --risk ${{ steps.infer-risk.outputs.risk }}
           done
-          echo "::set-output name=oci-archives::'$(ls *.rock)'"
+          echo "::set-output name=oci-archives::$(ls *.rock | sed -z 's/\n/ /g')"
 
       # Announce the build was successful
       - name: Report that the build was successful
@@ -176,6 +176,32 @@ jobs:
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "Successfully built and produced the following ROCKs OCI archives: ${{ steps.build-rocks.outputs.oci-archives }}"}
+
+      #### TEST
+      # Test all ROCKs in this ROCK project/repo
+      ## Black-box-testing
+      - name: Run Black-Box Tests
+        id: black-box-testing
+        run: |
+          for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
+          do
+            ./rocks-pipelines/src/rocks/Black-Box-Test.py --rock-oci-archive "${rock_oci_archive}"
+          done
+
+      # Announce the Black-box-testing was successful
+      - name: Report that the Black-box-testing was successful
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Black-box tests successful
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          output: |
+            {"summary": "Successfully performed the Black-box tests for: ${{ steps.build-rocks.outputs.oci-archives }}"}
+
 
       # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished

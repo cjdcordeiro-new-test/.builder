@@ -65,7 +65,9 @@ jobs:
           # Default: fetch-depth = 1
 
       - name: Prepare environment to run ROCKs CI/CD pipelines
-        run: pip install -r ./rocks-pipelines/src/rocks/requirements.txt
+        run: |
+          pip install -r ./rocks-pipelines/src/rocks/requirements.txt
+          ./rocks-pipelines/src/rocks/requirements.sh
 
       #### PREFLIGHT
       # Run ROCK preflight checks

@@ -245,7 +245,7 @@ jobs:
               "Accept": "application/vnd.github+json",
               "Authorization": f"token ${{ github.token }}"
             }
-            url = "${{ github.server_url }}/${{ github.repository }}/commits/${{ github.sha }}/check-runs"
+            url = "${{ github.api_url }}/${{ github.repository }}/commits/${{ github.sha }}/check-runs"
             check_runs = requests.get(url, headers=headers, params={"filter": "latest"}).json()
             for cr in check_runs["check_runs"]:
               if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}" in cr["name"]:

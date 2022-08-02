@@ -204,6 +204,30 @@ jobs:
           output: |
             {"summary": "Successfully performed the Black-box tests for: ${{ steps.build-rocks.outputs.oci-archives }}"}
 
+      ## Vulnerability scans
+      - name: Run Vulnerability Scans
+        id: vulnerability-scanning
+        run: |
+          for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
+          do
+            container_image_name="$(echo $rock_oci_archive | sed -z 's/.rock//g')""
+            ./rocks-pipelines/src/rocks/tests/Vulnerability-Scan.py --image "${container_image_name}"
+          done
+
+      # Announce the Black-box-testing was successful
+      - name: Report that the image has no high/critical vulnerabilities
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: No High/Critical vulnerabilities 
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          output: |
+            {"summary": "Could not find any High or Critical vulnerabilities for: ${{ steps.build-rocks.outputs.oci-archives }}"}
+
 
       # -----------------------------------------------------
       # Get the corresponding URL of the check_run

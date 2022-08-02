@@ -210,7 +210,7 @@ jobs:
         run: |
           for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
           do
-            container_image_name="$(echo $rock_oci_archive | sed -z 's/.rock//g')""
+            container_image_name="$(echo $rock_oci_archive | sed -z 's/.rock//g')"
             ./rocks-pipelines/src/rocks/tests/Vulnerability-Scan.py --image "${container_image_name}"
           done
 
@@ -245,7 +245,7 @@ jobs:
               "Accept": "application/vnd.github+json",
               "Authorization": f"token ${{ github.token }}"
             }
-            url = ${{ github.server_url }}/${{ github.repository }}/commits/${{ github.sha }}/check-runs
+            url = "${{ github.server_url }}/${{ github.repository }}/commits/${{ github.sha }}/check-runs"
             check_runs = requests.get(url, headers=headers, params={"filter": "latest"}).json()
             for cr in check_runs["check_runs"]:
               if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}" in cr["name"]:
@@ -265,8 +265,7 @@ jobs:
           status: completed
           conclusion: ${{ job.status }}
           output: |
-            {"summary": "The CI/CD pipeline for the ${{ matrix.rock.full_name }} ROCKs project, on commit ${{ matrix.rock.sha }} of branch ${{ matrix.rock.branch }} has finished with '${{ job.status }}'. \
-             You can view the build logs at ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}"}
+            {"summary": "The CI/CD pipeline for the ${{ matrix.rock.full_name }} ROCKs project, on commit ${{ matrix.rock.sha }} of branch ${{ matrix.rock.branch }} has finished with '${{ job.status }}'. You can view the build logs at ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}"}
 
 
   # # Wrap-up job

@@ -65,6 +65,9 @@ jobs:
           # Default: fetch-depth = 1
 
       - name: Prepare environment to run ROCKs CI/CD pipelines
+        env:
+          ROCKS_DEV_LP_SSH_PRIVATE: ${{ secrets.ROCKS_DEV_LP_SSH_PRIVATE }}
+          ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
         run: |
           pip install -r ./rocks-pipelines/src/rocks/requirements.txt
           ./rocks-pipelines/src/rocks/requirements.sh
@@ -73,6 +76,8 @@ jobs:
       # Run ROCK preflight checks
       - name: Run preflight checks
         id: preflight-checks 
+        env:
+          ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
         run: ./rocks-pipelines/src/rocks/Preflight-Checks.sh
 
       # Announce the preflight checks have finished
@@ -232,6 +237,13 @@ jobs:
       #### TAG AND PUBLISH
       - name: Tag and Publish
         id: tag-and-publish
+        env:
+          DOCKER_HUB_CREDS_PSW: ${{ secrets.DOCKER_HUB_CREDS_PSW }}
+          DOCKER_HUB_CREDS_USR: ${{ secrets.DOCKER_HUB_CREDS_USR }}
+          ACR_NAMESPACE: ${{ secrets.ACR_NAMESPACE }}
+          DOCKER_HUB_NAMESPACE: ${{ secrets.DOCKER_HUB_NAMESPACE }}
+          ECR_NAMESPACE: ${{ secrets.ECR_NAMESPACE }}
+          ECR_LTS_NAMESPACE: ${{ secrets.ECR_LTS_NAMESPACE }}
         run: |
           published=()
           for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`
@@ -254,7 +266,7 @@ jobs:
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           output: |
             {"summary": "Successfully tagged and published: ${{ steps.tag-and-publish.outputs.published }}"}
-            
+
       # -----------------------------------------------------
       # Get the corresponding URL of the check_run
       - name: Get check_run ID for project

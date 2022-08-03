@@ -164,6 +164,7 @@ jobs:
             ./rocks-pipelines/src/rocks/Build.py --rockcraft-yaml "${rockcraft_yaml}" --risk ${{ steps.infer-risk.outputs.risk }}
           done
           echo "::set-output name=oci-archives::$(ls *.rock | sed -z 's/\n/ /g')"
+          echo "::set-output name=marked-for-publishing::$PWD/mark_for_publishing"
 
       # Announce the build was successful
       - name: Report that the build was successful
@@ -228,7 +229,32 @@ jobs:
           output: |
             {"summary": "Could not find any High or Critical vulnerabilities for: ${{ steps.build-rocks.outputs.oci-archives }}"}
 
+      #### TAG AND PUBLISH
+      - name: Tag and Publish
+        id: tag-and-publish
+        run: |
+          published=()
+          for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`
+          do
+            ./rocks-pipelines/src/Tag-and-Publish.sh $(echo $publish_rock | tr "," " ")
+            published+=( $(echo $publish_rock | awk -F"," '{print $2":"$4}') )
+          done
+          echo "::set-output name=published::$published"
 
+      # Announce the images are now published
+      - name: Report that the images have been published
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Images published
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          output: |
+            {"summary": "Successfully tagged and published: ${{ steps.tag-and-publish.outputs.published }}"}
+            
       # -----------------------------------------------------
       # Get the corresponding URL of the check_run
       - name: Get check_run ID for project
@@ -245,7 +271,7 @@ jobs:
               "Accept": "application/vnd.github+json",
               "Authorization": f"token ${{ github.token }}"
             }
-            url = "${{ github.api_url }}/${{ github.repository }}/commits/${{ github.sha }}/check-runs"
+            url = "${{ github.api_url }}/repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs"
             check_runs = requests.get(url, headers=headers, params={"filter": "latest"}).json()
             for cr in check_runs["check_runs"]:
               if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}" in cr["name"]:

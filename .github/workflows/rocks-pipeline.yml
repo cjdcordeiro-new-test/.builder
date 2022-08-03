@@ -286,7 +286,7 @@ jobs:
             url = "${{ github.api_url }}/repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs"
             check_runs = requests.get(url, headers=headers, params={"filter": "latest"}).json()
             for cr in check_runs["check_runs"]:
-              if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}" in cr["name"]:
+              if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}"[:12] in cr["name"]:
                 print(cr['id'])
                 print(cr)
                 print(f"::set-output name=rock-build-id::{cr['id']}")

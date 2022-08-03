@@ -250,8 +250,8 @@ jobs:
           # TODO: change to prod
           ACR_NAMESPACE: rocksdev.azurecr.io # ubuntu.azurecr.io # ${{ secrets.ACR_NAMESPACE }}
           DOCKER_HUB_NAMESPACE: docker.io/rocksdev4staging #docker.io/ubuntu # ${{ secrets.DOCKER_HUB_NAMESPACE }}
-          ECR_NAMESPACE: rockdev #ubuntu # ${{ secrets.ECR_NAMESPACE }}
-          ECR_LTS_NAMESPACE: rockdev #lts # ${{ secrets.ECR_LTS_NAMESPACE }}
+          ECR_NAMESPACE: h3f3d8r8 #ubuntu # ${{ secrets.ECR_NAMESPACE }}
+          ECR_LTS_NAMESPACE: h3f3d8r8 #lts # ${{ secrets.ECR_LTS_NAMESPACE }}
         run: |
           published=()
           for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`

@@ -240,10 +240,18 @@ jobs:
         env:
           DOCKER_HUB_CREDS_PSW: ${{ secrets.DOCKER_HUB_CREDS_PSW }}
           DOCKER_HUB_CREDS_USR: ${{ secrets.DOCKER_HUB_CREDS_USR }}
-          ACR_NAMESPACE: ${{ secrets.ACR_NAMESPACE }}
-          DOCKER_HUB_NAMESPACE: ${{ secrets.DOCKER_HUB_NAMESPACE }}
-          ECR_NAMESPACE: ${{ secrets.ECR_NAMESPACE }}
-          ECR_LTS_NAMESPACE: ${{ secrets.ECR_LTS_NAMESPACE }}
+          ACR_CREDS_USR: ${{ secrets.ACR_CREDS_USR }}
+          ACR_CREDS_PSW: ${{ secrets.ACR_CREDS_PSW }}
+          ECR_CREDS_USR: ${{ secrets.ECR_CREDS_USR }}
+          ECR_CREDS_PSW: ${{ secrets.ECR_CREDS_PSW }}
+          ECR_LTS_CREDS_USR: ${{ secrets.ECR_LTS_CREDS_USR }}
+          ECR_LTS_CREDS_PSW: ${{ secrets.ECR_LTS_CREDS_PSW }}
+
+          # TODO: change to prod
+          ACR_NAMESPACE: rocksdev.azurecr.io # ubuntu.azurecr.io # ${{ secrets.ACR_NAMESPACE }}
+          DOCKER_HUB_NAMESPACE: docker.io/rocksdev4staging #docker.io/ubuntu # ${{ secrets.DOCKER_HUB_NAMESPACE }}
+          ECR_NAMESPACE: rockdev #ubuntu # ${{ secrets.ECR_NAMESPACE }}
+          ECR_LTS_NAMESPACE: rockdev #lts # ${{ secrets.ECR_LTS_NAMESPACE }}
         run: |
           published=()
           for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`
@@ -287,8 +295,6 @@ jobs:
             check_runs = requests.get(url, headers=headers, params={"filter": "latest"}).json()
             for cr in check_runs["check_runs"]:
               if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}"[:12] in cr["name"]:
-                print(cr['id'])
-                print(cr)
                 print(f"::set-output name=rock-build-id::{cr['id']}")
 
       # Announce to the ROCK commit that a build has finished

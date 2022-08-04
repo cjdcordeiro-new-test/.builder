@@ -85,6 +85,9 @@ jobs:
       - name: Checkout the organisation's .build repository
         uses: actions/checkout@v3
         with:
+          repository: ${{ github.repository }}
+          ref: main
+          token: ${{ github.token }}
           path: ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}
       # Get the ROCK CI/CD pipeline scripts
       - name: Checkout the ROCK CI/CD pipelines repository

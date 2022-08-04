@@ -74,9 +74,6 @@ jobs:
       ################################
       ### PREPARE ENVIRONMENT
       ################################
-      # Get this .build repo, for its GitHub CI-specific scripts
-      - name: Checkout the organisation's .build repository
-        uses: actions/checkout@v3
       # Get the ROCK commit that triggered this run
       - name: Checkout ${{ matrix.rock.sha }} from the ROCK repo (${{ matrix.rock.full_name }}) on ${{ matrix.rock.branch }}
         uses: actions/checkout@v3

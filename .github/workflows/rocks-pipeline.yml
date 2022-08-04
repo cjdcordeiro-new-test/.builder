@@ -14,7 +14,7 @@ on:
 env:
   BUILD_OUTPUTS: "${{ github.workspace }}/build_outputs"
   ROCKS_CICD_CHECKOUT_LOCATION: "${{ github.workspace }}/rocks-cicd"
-  GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION: "${{ github.workspace }}/.build"
+  GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION: "${{ github.workspace }}/rocks-github-scripts"
 
 jobs:
   rocks-ci-cd-pipeline:
@@ -156,7 +156,7 @@ jobs:
         id: determine-revisions
         run: |
           ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Determine-Revisions.py --project-dir "${{ github.workspace }}"
-          for rev in `ls *-revision`
+          for rev in `ls ${{ env.BUILD_OUTPUTS }}/*-revision`
           do
             echo "${rev}: $(cat $rev)"
           done
@@ -274,7 +274,14 @@ jobs:
           published=()
           for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`
           do
-            ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/Tag-and-Publish.sh $(echo $publish_rock | tr "," " ")
+            # TODO: improve error handling and potentially cleanup 
+            retry=0
+            ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/Tag-and-Publish.sh $(echo $publish_rock | tr "," " ") || retry=1
+            if [ $retry -eq 1 ]
+            then
+              !!
+              # Sometimes pushes are reset by peer 
+            fi
             published+=( $(echo $publish_rock | awk -F"," '{print $2":"$4}') )
           done
           echo "::set-output name=published::\"${published[@]}\""

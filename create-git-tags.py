@@ -6,7 +6,6 @@ import logging
 import os
 import requests
 import sys
-from datetime import datetime
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -54,7 +53,6 @@ for rock in published:
         "tagger": {
             "name": os.environ["GITHUB_ACTOR"],
             "email": "rocks-dev@lists.canonical.com",
-            "date": datetime.isoformat(datetime.utcnow()),
         },
     }
 

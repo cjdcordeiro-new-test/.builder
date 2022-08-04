@@ -14,7 +14,8 @@ on:
 env:
   BUILD_OUTPUTS: "${{ github.workspace }}/build_outputs"
   ROCKS_CICD_CHECKOUT_LOCATION: "${{ github.workspace }}/rocks-cicd"
-  GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION: "${{ github.workspace }}/rocks-github-scripts"
+  GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION: "${{ github.workspace }}"
+  ROCK_PROJECT_CHECKOUT_LOCATION: "${{ github.workspace }}/rocks-project"
 
 jobs:
   rocks-ci-cd-pipeline:
@@ -73,6 +74,9 @@ jobs:
       ################################
       ### PREPARE ENVIRONMENT
       ################################
+      # Get this .build repo, for its GitHub CI-specific scripts
+      - name: Checkout the organisation's .build repository
+        uses: actions/checkout@v3
       # Get the ROCK commit that triggered this run
       - name: Checkout ${{ matrix.rock.sha }} from the ROCK repo (${{ matrix.rock.full_name }}) on ${{ matrix.rock.branch }}
         uses: actions/checkout@v3
@@ -81,14 +85,7 @@ jobs:
           ref: ${{ matrix.rock.sha }}
           token: ${{ steps.get_token.outputs.app_token }}
           submodules: 'recursive'
-      # Get this .build repo, for its GitHub CI-specific scripts
-      - name: Checkout the organisation's .build repository
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ github.repository }}
-          ref: main
-          token: ${{ github.token }}
-          path: ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}
+          path: ${{ env.ROCK_PROJECT_CHECKOUT_LOCATION }}
       # Get the ROCK CI/CD pipeline scripts
       - name: Checkout the ROCK CI/CD pipelines repository
         uses: actions/checkout@v3
@@ -157,8 +154,11 @@ jobs:
       # Get the next revision number for all ROCKs in this project
       - name: Determine ROCKs revision numbers
         id: determine-revisions
+        # TODO: remove this env
+        env:
+          LOOKUP_REGISTRY: "https://registry.hub.docker.com/v1/repositories/rocksdev4staging"
         run: |
-          ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Determine-Revisions.py --project-dir "${{ github.workspace }}"
+          ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Determine-Revisions.py --project-dir "${{ env.ROCK_PROJECT_CHECKOUT_LOCATION }}"
           for rev in `ls ${{ env.BUILD_OUTPUTS }}/*-revision`
           do
             echo "${rev}: $(cat $rev)"

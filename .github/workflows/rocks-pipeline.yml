@@ -98,6 +98,11 @@ jobs:
           ROCKS_DEV_LP_SSH_PRIVATE: ${{ secrets.ROCKS_DEV_LP_SSH_PRIVATE }}
           ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
         run: |
+          ls 
+          pwd 
+          ls .. 
+          echo ${{ github.workspace }}
+          echo ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}
           pip install -r ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.txt
           ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.sh
 

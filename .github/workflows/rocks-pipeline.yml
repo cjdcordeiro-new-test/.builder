@@ -13,7 +13,7 @@ on:
 
 env:
   BUILD_OUTPUTS: "${{ github.workspace }}/build_outputs"
-  ROCKS_CICD_CHECKOUT_LOCATION: ""${{ github.workspace }}/rocks-cicd"
+  ROCKS_CICD_CHECKOUT_LOCATION: "${{ github.workspace }}/rocks-cicd"
   GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION: "${{ github.workspace }}/.build"
 
 jobs:

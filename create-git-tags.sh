@@ -30,7 +30,7 @@ do
 
     tag_name="${tag_prefix}/${rock_version}/${rock_base}/${rock_revision}/${risk}"
 
-    git tag -a -s \
+    git tag -a \
         -m "New revision ${rock_revision} of ${rock_name} ${rock_version} created (OCI tags: ${oci_tags})" \
         $tag_name $rock_commit
 

@@ -15,7 +15,7 @@ rock_repository="$5"
 rock_commit="$6"
 
 # Move to rock repo and create tag
-pushd $GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION
+pushd $ROCK_PROJECT_CHECKOUT_LOCATION
 git remote add upstream-rock https://rocks-team:${token}@github.com/${rock_repository}
 
 tag_prefix=$(echo $branch | awk -F"/" '{print $1"/"$2}')

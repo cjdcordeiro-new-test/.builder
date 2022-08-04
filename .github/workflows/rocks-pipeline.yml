@@ -74,6 +74,9 @@ jobs:
       ################################
       ### PREPARE ENVIRONMENT
       ################################
+      # Get this .build repo, for its GitHub CI-specific scripts
+      - name: Checkout the organisation's .build repository
+        uses: actions/checkout@v3
       # Get the ROCK commit that triggered this run
       - name: Checkout ${{ matrix.rock.sha }} from the ROCK repo (${{ matrix.rock.full_name }}) on ${{ matrix.rock.branch }}
         uses: actions/checkout@v3
@@ -98,11 +101,6 @@ jobs:
           ROCKS_DEV_LP_SSH_PRIVATE: ${{ secrets.ROCKS_DEV_LP_SSH_PRIVATE }}
           ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
         run: |
-          ls 
-          pwd 
-          ls .. 
-          echo ${{ github.workspace }}
-          echo ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}
           pip install -r ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.txt
           ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.sh
 

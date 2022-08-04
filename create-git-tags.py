@@ -58,6 +58,8 @@ for rock in published:
     tag = requests.post(
         create_tag_url, headers=headers, data=json.dumps(tag_payload)
     ).json()
+    
+    logging.info(f"Git tag {tag_name} creation response: {tag}")
 
     ref_url = f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}/git/refs"
     ref_payload = {"ref": f"refs/tag/{tag_name}", "sha": tag["sha"]}

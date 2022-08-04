@@ -16,6 +16,8 @@ rock_commit="$6"
 
 # Move to rock repo and create tag
 pushd $ROCK_PROJECT_CHECKOUT_LOCATION
+git config user.email "rocks-dev@lists.canonical.com"
+git config user.name "ROCKS Team"
 git remote add upstream-rock https://rocks-team:${token}@github.com/${rock_repository}
 
 tag_prefix=$(echo $branch | awk -F"/" '{print $1"/"$2}')

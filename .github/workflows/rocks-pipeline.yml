@@ -11,6 +11,11 @@ on:
         required: true
         type: string
 
+env:
+  BUILD_OUTPUTS: "${{ github.workspace }}/build_outputs"
+  ROCKS_CICD_CHECKOUT_LOCATION: "/tmp/rocks-cicd"
+  GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION: "/tmp/.build"
+
 jobs:
   rocks-ci-cd-pipeline:
     name: ROCK CI/CD build pipeline
@@ -20,6 +25,9 @@ jobs:
       matrix: 
         rock: ${{ fromJSON(inputs.matrix_combinations) }}
     steps:
+      ################################
+      ### BOOTSTRAPPING THE BUILD
+      ################################
       # Fetch GH App token for performing org operation during the pipeline
       - name: Get token for Organization Workflow
         id: get_token
@@ -27,255 +35,6 @@ jobs:
         with:
           APP_PEM: ${{ secrets.APP_PEM }}
           APP_ID: ${{ secrets.APP_ID }}
-
-      # Get the ROCK commit that triggered this run
-      - name: Checkout ${{ matrix.rock.sha }} from the ROCK repo (${{ matrix.rock.full_name }}) on ${{ matrix.rock.branch }}
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ matrix.rock.full_name }}
-          ref: ${{ matrix.rock.sha }}
-          token: ${{ steps.get_token.outputs.app_token }}
-          submodules: 'recursive'
-          # Default: fetch-depth = 1
-
-      # Announce to the ROCK commit that a build is starting
-      - name: Report the start of the ROCK CI/CD pipeline 
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        id: checks-build-start
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: Building ROCK on ${{ matrix.rock.branch }}
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          status: in_progress
-          output: |
-            {"summary": "Building, testing and publishing a new ROCK revision for ${{ matrix.rock.name }}, based on the changes from ${{ matrix.rock.sha }} in branch ${{ matrix.rock.branch }}"}
-
-      # Get the ROCK CI/CD pipeline scripts
-      - name: Checkout the ROCK CI/CD pipelines repository
-        uses: actions/checkout@v3
-        with:
-          repository: ubuntu-rocks/rocks-pipelines
-          ref: rocks-ci   # TODO: main
-          token: ${{ secrets.SERVICE_ACCOUNT_PAT }}  # TODO replace by ${{ steps.get_token.outputs.app_token }}
-          submodules: 'recursive'
-          path: rocks-pipelines
-          # Default: fetch-depth = 1
-
-      - name: Prepare environment to run ROCKs CI/CD pipelines
-        env:
-          ROCKS_DEV_LP_SSH_PRIVATE: ${{ secrets.ROCKS_DEV_LP_SSH_PRIVATE }}
-          ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
-        run: |
-          pip install -r ./rocks-pipelines/src/rocks/requirements.txt
-          ./rocks-pipelines/src/rocks/requirements.sh
-
-      #### PREFLIGHT
-      # Run ROCK preflight checks
-      - name: Run preflight checks
-        id: preflight-checks 
-        env:
-          ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
-        run: ./rocks-pipelines/src/rocks/Preflight-Checks.sh
-
-      # Announce the preflight checks have finished
-      - name: Report that preflight checks have ended 
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: Preflight checks completed
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          conclusion: success
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          output: |
-            {"summary": "Preflight checks have completed with ${{ steps.preflight-checks.outcome }}"}
-
-      #### INFER RISK
-      # Get the risk for this ROCK
-      - name: Infer risk
-        id: infer-risk 
-        uses: jannekem/run-python-script-action@v1
-        with:
-          script: |
-            branch = "${{ matrix.rock.branch }}"
-            # expected format is channels/<track>/<risk>/<...>
-            supported_risks = ["edge", "beta", "candidate", "stable"]
-            try:
-              risk = branch.split("/")[2]
-            except IndexError:
-              # this means a risk was not provided
-              # default to "edge"
-              risk = "edge"
-            
-            if risk in supported_risks:
-              print(f"::set-output name=risk::{risk}")
-            else:
-              raise Exception(f"Inferred unsupported risk {risk} from branch name {branch}.\
-                Supported risks are: {supported_risks}")
-
-      # Announce the inferred risk
-      - name: Report the inferred risk
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: Inferred risk = ${{ steps.infer-risk.outputs.risk }}
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          conclusion: success
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          output: |
-            {"summary": "Building ROCK for risk '${{ steps.infer-risk.outputs.risk }}' (based on channel name ${{ matrix.rock.branch }})"}
-
-      #### DETERMINE REVISION NUMBER
-      # Get the next revision number for all ROCKs in this project
-      - name: Determine ROCKs revision numbers
-        id: determine-revisions
-        run: |
-          ./rocks-pipelines/src/rocks/Determine-Revisions.py --project-dir "${{ github.workspace }}"
-          for rev in `ls *-revision`
-          do
-            echo "${rev}: $(cat $rev)"
-          done
-
-      # Announce the revision numbers are known
-      - name: Report that the revision numbers have been determined
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: Revision numbers determined
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          conclusion: success
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          output: |
-            {"summary": "The revision numbers for the ROCKs in this commit have been determined with ${{ steps.determine-revisions.outcome }}"}
-
-      #### BUILD
-      # Build all ROCKs in this ROCK project/repo
-      - name: Build ROCKs
-        id: build-rocks
-        env:
-          DOCKER_BUILDKIT: 1
-        run: |
-          docker buildx create --use
-          for rockcraft_yaml in `ls rockcraft.*.y[[:alnum:]]ml`
-          do
-            ./rocks-pipelines/src/rocks/Build.py --rockcraft-yaml "${rockcraft_yaml}" --risk ${{ steps.infer-risk.outputs.risk }}
-          done
-          echo "::set-output name=oci-archives::$(ls *.rock | sed -z 's/\n/ /g')"
-          echo "::set-output name=marked-for-publishing::$PWD/mark_for_publishing"
-
-      # Announce the build was successful
-      - name: Report that the build was successful
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: ROCKs builds successful
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          conclusion: success
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          output: |
-            {"summary": "Successfully built and produced the following ROCKs OCI archives: ${{ steps.build-rocks.outputs.oci-archives }}"}
-
-      #### TEST
-      # Test all ROCKs in this ROCK project/repo
-      ## Black-box-testing
-      - name: Run Black-Box Tests
-        id: black-box-testing
-        run: |
-          for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
-          do
-            ./rocks-pipelines/src/rocks/tests/Black-Box-Test.py --rock-oci-archive "${rock_oci_archive}"
-          done
-
-      # Announce the Black-box-testing was successful
-      - name: Report that the Black-box-testing was successful
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: Black-box tests successful
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          conclusion: success
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          output: |
-            {"summary": "Successfully performed the Black-box tests for: ${{ steps.build-rocks.outputs.oci-archives }}"}
-
-      ## Vulnerability scans
-      - name: Run Vulnerability Scans
-        id: vulnerability-scanning
-        run: |
-          for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
-          do
-            container_image_name="$(echo $rock_oci_archive | sed -z 's/.rock//g')"
-            ./rocks-pipelines/src/rocks/tests/Vulnerability-Scan.py --image "${container_image_name}"
-          done
-
-      # Announce the Black-box-testing was successful
-      - name: Report that the image has no high/critical vulnerabilities
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: No High/Critical vulnerabilities 
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          conclusion: success
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          output: |
-            {"summary": "Could not find any High or Critical vulnerabilities for: ${{ steps.build-rocks.outputs.oci-archives }}"}
-
-      #### TAG AND PUBLISH
-      - name: Tag and Publish
-        id: tag-and-publish
-        env:
-          DOCKER_HUB_CREDS_PSW: ${{ secrets.DOCKER_HUB_CREDS_PSW }}
-          DOCKER_HUB_CREDS_USR: ${{ secrets.DOCKER_HUB_CREDS_USR }}
-          ACR_CREDS_USR: ${{ secrets.ACR_CREDS_USR }}
-          ACR_CREDS_PSW: ${{ secrets.ACR_CREDS_PSW }}
-          ECR_CREDS_USR: ${{ secrets.ECR_CREDS_USR }}
-          ECR_CREDS_PSW: ${{ secrets.ECR_CREDS_PSW }}
-          ECR_LTS_CREDS_USR: ${{ secrets.ECR_LTS_CREDS_USR }}
-          ECR_LTS_CREDS_PSW: ${{ secrets.ECR_LTS_CREDS_PSW }}
-
-          # TODO: change to prod
-          ACR_NAMESPACE: rocksdev.azurecr.io # ubuntu.azurecr.io # ${{ secrets.ACR_NAMESPACE }}
-          DOCKER_HUB_NAMESPACE: docker.io/rocksdev4staging #docker.io/ubuntu # ${{ secrets.DOCKER_HUB_NAMESPACE }}
-          ECR_NAMESPACE: h3f3d8r8 #ubuntu # ${{ secrets.ECR_NAMESPACE }}
-          ECR_LTS_NAMESPACE: h3f3d8r8 #lts # ${{ secrets.ECR_LTS_NAMESPACE }}
-        run: |
-          published=()
-          for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`
-          do
-            ./rocks-pipelines/src/Tag-and-Publish.sh $(echo $publish_rock | tr "," " ")
-            published+=( $(echo $publish_rock | awk -F"," '{print $2":"$4}') )
-          done
-          echo "::set-output name=published::$published"
-
-      # Announce the images are now published
-      - name: Report that the images have been published
-        uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
-        with:
-          token: ${{ steps.get_token.outputs.app_token }}
-          name: Images published
-          sha: ${{ matrix.rock.sha }}
-          repo: ${{ matrix.rock.full_name }}
-          conclusion: success
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          output: |
-            {"summary": "Successfully tagged and published: ${{ steps.tag-and-publish.outputs.published }}"}
-
-      # -----------------------------------------------------
       # Get the corresponding URL of the check_run
       - name: Get check_run ID for project
         if: always()
@@ -296,29 +55,283 @@ jobs:
             for cr in check_runs["check_runs"]:
               if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}"[:12] in cr["name"]:
                 print(f"::set-output name=rock-build-id::{cr['id']}")
+      # Announce to the ROCK commit that a build is starting
+      - name: Report the start of the ROCK CI/CD pipeline 
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true
+        id: checks-build-start
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Building ROCK on ${{ matrix.rock.branch }}
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          status: in_progress
+          output: |
+            {"summary": "Building, testing and publishing a new ROCK revision for ${{ matrix.rock.name }}, based on the changes from ${{ matrix.rock.sha }} in branch ${{ matrix.rock.branch }}"}
 
+      ################################
+      ### PREPARE ENVIRONMENT
+      ################################
+      # Get the ROCK commit that triggered this run
+      - name: Checkout ${{ matrix.rock.sha }} from the ROCK repo (${{ matrix.rock.full_name }}) on ${{ matrix.rock.branch }}
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ matrix.rock.full_name }}
+          ref: ${{ matrix.rock.sha }}
+          token: ${{ steps.get_token.outputs.app_token }}
+          submodules: 'recursive'
+      # Get this .build repo, for its GitHub CI-specific scripts
+      - name: Checkout the organisation's .build repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}
+      # Get the ROCK CI/CD pipeline scripts
+      - name: Checkout the ROCK CI/CD pipelines repository
+        uses: actions/checkout@v3
+        with:
+          repository: ubuntu-rocks/rocks-pipelines
+          ref: rocks-ci   # TODO: main
+          token: ${{ steps.get_token.outputs.app_token }}
+          submodules: 'recursive'
+          path: ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}
+      # Install requirements for ROCKs CI/CD pipelines
+      - name: Prepare environment to run ROCKs CI/CD pipelines
+        env:
+          ROCKS_DEV_LP_SSH_PRIVATE: ${{ secrets.ROCKS_DEV_LP_SSH_PRIVATE }}
+          ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
+        run: |
+          pip install -r ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.txt
+          ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.sh
+
+      ################################
+      ### PREFLIGHT CHECKS
+      ################################
+      # Run ROCK preflight checks
+      - name: Run preflight checks
+        id: preflight-checks 
+        env:
+          ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
+        run: ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Preflight-Checks.sh
+      # Announce the preflight checks have finished
+      - name: Report that preflight checks have ended 
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Preflight checks completed
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "Preflight checks have completed with ${{ steps.preflight-checks.outcome }}"}
+
+      ################################
+      ### INFER RISK 
+      ################################
+      # Get the risk for this ROCK
+      - name: Infer risk
+        id: infer-risk 
+        run: ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}/infer-risk.py --channel ${{ matrix.rock.branch }}
+      # Announce the inferred risk
+      - name: Report the inferred risk
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Inferred risk = ${{ steps.infer-risk.outputs.risk }}
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "Building ROCK for risk '${{ steps.infer-risk.outputs.risk }}' (based on channel name ${{ matrix.rock.branch }})"}
+
+      ################################
+      ### DETERMINE REVISION NUMBER
+      ################################
+      # Get the next revision number for all ROCKs in this project
+      - name: Determine ROCKs revision numbers
+        id: determine-revisions
+        run: |
+          ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Determine-Revisions.py --project-dir "${{ github.workspace }}"
+          for rev in `ls *-revision`
+          do
+            echo "${rev}: $(cat $rev)"
+          done
+      # Announce the revision numbers are known
+      - name: Report that the revision numbers have been determined
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Revision numbers determined
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "The revision numbers for the ROCKs in this commit have been determined with ${{ steps.determine-revisions.outcome }}"}
+
+      ################################
+      ### BUILD ROCKS
+      ################################
+      # Build all ROCKs in this ROCK project/repo
+      - name: Build ROCKs
+        id: build-rocks
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          docker buildx create --use
+          for rockcraft_yaml in `ls rockcraft.*.y[[:alnum:]]ml`
+          do
+            ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Build.py --rockcraft-yaml "${rockcraft_yaml}" --risk ${{ steps.infer-risk.outputs.risk }}
+          done
+          echo "::set-output name=oci-archives::$(ls ${{ env.BUILD_OUTPUTS }}/*.rock | sed -z 's/\n/ /g')"
+          echo "::set-output name=marked-for-publishing::${{ env.BUILD_OUTPUTS }}/mark_for_publishing"
+      # Announce the build was successful
+      - name: Report that the build was successful
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: ROCKs builds successful
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "Successfully built and produced the following ROCKs OCI archives: ${{ steps.build-rocks.outputs.oci-archives }}"}
+
+      ################################
+      ### RUN TESTS
+      ################################
+      # Black-box-testing
+      - name: Run Black-Box Tests
+        id: black-box-testing
+        run: |
+          for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
+          do
+            ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/tests/Black-Box-Test.py --rock-oci-archive "${rock_oci_archive}"
+          done
+      # Announce the Black-box-testing was successful
+      - name: Report that the Black-box-testing was successful
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Black-box tests successful
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "Successfully performed the Black-box tests for: ${{ steps.build-rocks.outputs.oci-archives }}"}
+      # Vulnerability scans
+      - name: Run Vulnerability Scans
+        id: vulnerability-scanning
+        run: |
+          for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
+          do
+            container_image_name="$(echo $rock_oci_archive | sed -z 's/.rock//g')"
+            ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/tests/Vulnerability-Scan.py --image "${container_image_name}"
+          done
+      # Announce the vulnerability scans were successful
+      - name: Report that the image has no high/critical vulnerabilities
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: No High/Critical vulnerabilities 
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "Could not find any High or Critical vulnerabilities for: ${{ steps.build-rocks.outputs.oci-archives }}"}
+
+      ################################
+      ### TAG AND PUBLISH
+      ################################
+      - name: Tag and Publish
+        id: tag-and-publish
+        env:
+          DOCKER_HUB_CREDS_PSW: ${{ secrets.DOCKER_HUB_CREDS_PSW }}
+          DOCKER_HUB_CREDS_USR: ${{ secrets.DOCKER_HUB_CREDS_USR }}
+          ACR_CREDS_USR: ${{ secrets.ACR_CREDS_USR }}
+          ACR_CREDS_PSW: ${{ secrets.ACR_CREDS_PSW }}
+          ECR_CREDS_USR: ${{ secrets.ECR_CREDS_USR }}
+          ECR_CREDS_PSW: ${{ secrets.ECR_CREDS_PSW }}
+          ECR_LTS_CREDS_USR: ${{ secrets.ECR_LTS_CREDS_USR }}
+          ECR_LTS_CREDS_PSW: ${{ secrets.ECR_LTS_CREDS_PSW }}
+          # TODO: change to prod
+          ACR_NAMESPACE: rocksdev.azurecr.io # ubuntu.azurecr.io # ${{ secrets.ACR_NAMESPACE }}
+          DOCKER_HUB_NAMESPACE: docker.io/rocksdev4staging #docker.io/ubuntu # ${{ secrets.DOCKER_HUB_NAMESPACE }}
+          ECR_NAMESPACE: h3f3d8r8 #ubuntu # ${{ secrets.ECR_NAMESPACE }}
+          ECR_LTS_NAMESPACE: h3f3d8r8 #lts # ${{ secrets.ECR_LTS_NAMESPACE }}
+        run: |
+          published=()
+          for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`
+          do
+            ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/Tag-and-Publish.sh $(echo $publish_rock | tr "," " ")
+            published+=( $(echo $publish_rock | awk -F"," '{print $2":"$4}') )
+          done
+          echo "::set-output name=published::\"${published[@]}\""
+      # Announce the images are now published
+      - name: Report that the images have been published
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Images published
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "Successfully tagged and published: ${{ steps.tag-and-publish.outputs.published }}"}
+
+      ################################
+      ### CREATE GIT TAGS
+      ################################
+      - name: Create Git tags
+        id: git-tags
+        run: |
+          ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}/create-git-tags.py \
+            --token ${{ steps.get_token.outputs.app_token }} \
+            --marked-for-publishing ${{ steps.build-rocks.outputs.marked-for-publishing }} \
+            --branch ${{ matrix.rock.branch }} \
+            --risk ${{ steps.infer-risk.outputs.risk }} \
+            --commit ${{ matrix.rock.sha }}
+      # Announce the Git tags have been created
+      - name: Report that the remote Git tags have been created
+        uses: LouisBrunner/checks-action@v1.1.1
+        continue-on-error: true   
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          name: Git tags created
+          sha: ${{ matrix.rock.sha }}
+          repo: ${{ matrix.rock.full_name }}
+          conclusion: success
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          output: |
+            {"summary": "Created a new Git tag for each build: ${{ steps.git-tags.outputs.git-tags }}"}
+
+      ################################
+      # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished
       - name: Report the end of the ROCK CI/CD pipeline 
         uses: LouisBrunner/checks-action@v1.1.1
         if: always()
-        continue-on-error: true   # Checks API does not work with PAT, only GH Apps
+        continue-on-error: true   
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           check_id: ${{ steps.checks-build-start.outputs.check_id }}
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          details_url: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
           status: completed
           conclusion: ${{ job.status }}
           output: |
             {"summary": "The CI/CD pipeline for the ${{ matrix.rock.full_name }} ROCKs project, on commit ${{ matrix.rock.sha }} of branch ${{ matrix.rock.branch }} has finished with '${{ job.status }}'. You can view the build logs at ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}"}
-
-
-  # # Wrap-up job
-  # wrap-up:
-  #   name: Wrap up after ROCK CI/CD pipeline execution
-  #   needs: rocks-ci-cd-pipeline
-  #   if: always()
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: 

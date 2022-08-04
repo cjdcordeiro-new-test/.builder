@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import requests
+import sys
 from datetime import datetime
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)

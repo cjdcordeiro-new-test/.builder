@@ -92,7 +92,7 @@ jobs:
         with:
           repository: ubuntu-rocks/rocks-pipelines
           ref: rocks-ci   # TODO: main
-          token: ${{ steps.get_token.outputs.app_token }}
+          token: ${{ secrets.SERVICE_ACCOUNT_PAT }}  # TODO replace by ${{ steps.get_token.outputs.app_token }}
           submodules: 'recursive'
           path: ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}
       # Install requirements for ROCKs CI/CD pipelines

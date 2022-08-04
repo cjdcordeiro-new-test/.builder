@@ -101,6 +101,7 @@ jobs:
           ROCKS_DEV_LP_SSH_PRIVATE: ${{ secrets.ROCKS_DEV_LP_SSH_PRIVATE }}
           ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
         run: |
+          set -eux
           mkdir -p ${{ env.BUILD_OUTPUTS }}
           pip install -r ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.txt
           ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/requirements.sh
@@ -160,6 +161,7 @@ jobs:
         env:
           LOOKUP_REGISTRY: "https://registry.hub.docker.com/v1/repositories/rocksdev4staging"
         run: |
+          set -eux
           ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Determine-Revisions.py --project-dir "${{ env.ROCK_PROJECT_CHECKOUT_LOCATION }}"
           for rev in `ls ${{ env.BUILD_OUTPUTS }}/*-revision`
           do
@@ -188,8 +190,9 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
         run: |
+          set -eux
           docker buildx create --use
-          for rockcraft_yaml in `ls rockcraft.*.y[[:alnum:]]ml`
+          for rockcraft_yaml in `ls ${{ env.ROCK_PROJECT_CHECKOUT_LOCATION }}/rockcraft.*.y[[:alnum:]]ml`
           do
             ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Build.py --rockcraft-yaml "${rockcraft_yaml}" --risk ${{ steps.infer-risk.outputs.risk }}
           done
@@ -216,6 +219,7 @@ jobs:
       - name: Run Black-Box Tests
         id: black-box-testing
         run: |
+          set -eux
           for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
           do
             ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/tests/Black-Box-Test.py --rock-oci-archive "${rock_oci_archive}"
@@ -237,6 +241,7 @@ jobs:
       - name: Run Vulnerability Scans
         id: vulnerability-scanning
         run: |
+          set -eux
           for rock_oci_archive in ${{ steps.build-rocks.outputs.oci-archives }}
           do
             container_image_name="$(echo $rock_oci_archive | sed -z 's/.rock//g')"
@@ -276,6 +281,7 @@ jobs:
           ECR_NAMESPACE: h3f3d8r8 #ubuntu # ${{ secrets.ECR_NAMESPACE }}
           ECR_LTS_NAMESPACE: h3f3d8r8 #lts # ${{ secrets.ECR_LTS_NAMESPACE }}
         run: |
+          set -eux
           published=()
           for publish_rock in `cat ${{ steps.build-rocks.outputs.marked-for-publishing }}`
           do

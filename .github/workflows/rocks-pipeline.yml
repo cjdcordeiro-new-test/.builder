@@ -112,6 +112,7 @@ jobs:
         id: preflight-checks 
         env:
           ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
+          ROCK_PROJECT_PATH: ${{ env.ROCK_PROJECT_CHECKOUT_LOCATION }}
         run: ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Preflight-Checks.sh
       # Announce the preflight checks have finished
       - name: Report that preflight checks have ended 

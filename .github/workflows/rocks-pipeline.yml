@@ -322,7 +322,7 @@ jobs:
             --marked-for-publishing ${{ steps.build-rocks.outputs.marked-for-publishing }} \
             --branch ${{ matrix.rock.branch }} \
             --risk ${{ steps.infer-risk.outputs.risk }} \
-            --commit ${{ matrix.rock.sha }}
+            --commit ${{ matrix.rock.sha }} \
             --rock-repository ${{ matrix.rock.full_name }}
       # Announce the Git tags have been created
       - name: Report that the remote Git tags have been created

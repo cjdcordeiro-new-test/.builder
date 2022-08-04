@@ -7,6 +7,8 @@ import os
 import requests
 from datetime import datetime
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
 parser = argparse.ArgumentParser(
     description="Create a Git tag to a remote commit, after a successful ROCK build."
 )

@@ -316,12 +316,14 @@ jobs:
       - name: Create Git tags
         id: git-tags
         run: |
+          set -eux
           ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}/create-git-tags.py \
             --token ${{ steps.get_token.outputs.app_token }} \
             --marked-for-publishing ${{ steps.build-rocks.outputs.marked-for-publishing }} \
             --branch ${{ matrix.rock.branch }} \
             --risk ${{ steps.infer-risk.outputs.risk }} \
             --commit ${{ matrix.rock.sha }}
+            --rock-repository ${{ matrix.rock.full_name }}
       # Announce the Git tags have been created
       - name: Report that the remote Git tags have been created
         uses: LouisBrunner/checks-action@v1.1.1

@@ -29,6 +29,12 @@ parser.add_argument("--risk", dest="risk", required=True, help="build risk")
 parser.add_argument(
     "--commit", dest="commit", required=True, help="sha of the remote commit"
 )
+parser.add_argument(
+    "--rock-repository",
+    dest="rock_repository",
+    required=True,
+    help="ubuntu-rocks/<repo> of the ROCK project",
+)
 
 args = parser.parse_args()
 
@@ -56,14 +62,14 @@ for rock in published:
         },
     }
 
-    create_tag_url = f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}/git/tags"
+    create_tag_url = f"{os.environ['GITHUB_API_URL']}/repos/{args.rock_repository}/git/tags"
     tag = requests.post(
         create_tag_url, headers=headers, data=json.dumps(tag_payload)
     ).json()
-    
+
     logging.info(f"Git tag {tag_name} creation response: {tag}")
 
-    ref_url = f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}/git/refs"
+    ref_url = f"{os.environ['GITHUB_API_URL']}/repos/{args.rock_repository}/git/refs"
     ref_payload = {"ref": f"refs/tag/{tag_name}", "sha": tag["sha"]}
     ref = requests.post(ref_url, headers=headers, data=json.dumps(ref_payload))
     ref.raise_for_status()

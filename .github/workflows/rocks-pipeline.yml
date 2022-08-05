@@ -372,9 +372,12 @@ jobs:
             ROCK project: [${{ matrix.rock.name }}](${{ github.server_url }}/${{ matrix.rock.full_name }})
             Source branch: ${{ matrix.rock.full_name }}
             Source commit: ${{ matrix.rock.sha }}
+
             ---
+            
             Published ROCKs: ${{ steps.tag-and-publish.outputs.published }}
             Git tags: ${{ steps.git-tags.outputs.git-tags }}
+            
             ---
             Build logs: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
           labels: announcement

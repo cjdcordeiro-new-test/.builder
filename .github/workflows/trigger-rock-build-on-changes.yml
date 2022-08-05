@@ -7,6 +7,7 @@ on:
 
 jobs:
   check-for-updated-rock-projects:
+    if: github.ref_name == 'main2'
     runs-on: ubuntu-latest
     outputs:
       triggers: ${{ steps.generate-build-matrix.outputs.triggers }}

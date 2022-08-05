@@ -30,7 +30,7 @@ do
     rock_revision="$(echo $rock | cut -d ',' -f 6)"
     oci_tags="$(echo $rock | cut -d ',' -f 7)"
 
-    tag_name="${tag_prefix}/${rock_version}/${rock_base}/${rock_revision}/${risk}"
+    tag_name="${tag_prefix}/${rock_version}/${rock_name}/${rock_base}/${rock_revision}/${risk}"
 
     git tag -a \
         -m "New revision ${rock_revision} of ${rock_name} ${rock_version} created (OCI tags: ${oci_tags})" \

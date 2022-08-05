@@ -354,3 +354,52 @@ jobs:
           conclusion: ${{ job.status }}
           output: |
             {"summary": "The CI/CD pipeline for the ${{ matrix.rock.full_name }} ROCKs project, on commit ${{ matrix.rock.sha }} of branch ${{ matrix.rock.branch }} has finished with '${{ job.status }}'. You can view the build logs at ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}"}
+      # Create announcement issue with build report
+      - name: Notify via issue
+        uses: JasonEtco/create-an-issue@v2
+        if: always()
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.get_token.outputs.app_token }}
+          BUILD_STATUS: ${{ job.status }}
+          BUILD_ROCK_PROJECT: ${{ matrix.rock.name }}
+          BUILD_ROCK_PROJECT_URL: "${{ github.server_url }}/${{ matrix.rock.full_name }}"
+          BUILD_FROM_BRANCH: ${{ matrix.rock.full_name }}
+          BUILD_FROM_COMMIT: ${{ matrix.rock.sha }}
+          BUILD_PUBLISHED_ROCKS: ${{ steps.tag-and-publish.outputs.published }}
+          BUILD_GIT_TAGS: ${{ steps.git-tags.outputs.git-tags }}
+          BUILD_LOGS_URL: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+  # notify might be hard, cause we need to get the aggregated status of the matrix job
+  # so it's not just a single status      
+  # notify:
+  #   needs:
+  #       - rocks-ci-cd-pipeline
+  #   if: always()
+  #   name: Post Workflow Status to ROCKS Team
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #   - name: Create the Mattermost Message
+  #     run: |
+  #       case "${{ needs.build.outputs.build_status }}" in
+  #         failure) msg_icon=":x:" ;;
+  #         success) msg_icon=":white_check_mark:" ;;
+  #         cancelled) msg_icon=":no_entry_sign:" ;;
+  #         *) msg_icon=":grey_question:" ;;
+  #       esac
+  #       msg=$(cat << EOF
+  #       ##### $msg_icon GitHub Workflow '${{ github.workflow	}}' execution [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) has ended with the status \`${{ needs.build.outputs.build_status }}\`, for:
+  #        - Project: [${{ github.repository }}](${{ github.server_url }}/${{ github.repository }})
+  #        - Branch: [${{ github.ref_name }}](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+  #       EOF
+  #       )
+  #       jq -n --arg message "$msg" >mattermost.json '
+  #         {
+  #           text: $message,
+  #         }
+  #       '
+  #   - uses: slackapi/slack-github-action@v1.19.0
+  #     with:
+  #       payload-file-path: "mattermost.json"
+  #     env:
+  #       SLACK_WEBHOOK_URL: ${{ secrets.MATTERMOST_ROCKS_DEV_WEBHOOK_URL }}

@@ -37,6 +37,8 @@ do
         $tag_name $rock_commit
 
     git push upstream-rock $tag_name
-    
+    all_tags+=( $tag_name )
 done < "${marked_for_publishing}"
 popd
+
+echo "::set-output name=git-tags::${all_tags[@]}"

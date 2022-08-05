@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         rock: ${{ fromJSON(inputs.matrix_combinations) }}
     steps:
       ################################
@@ -39,7 +39,7 @@ jobs:
       # Get the corresponding URL of the check_run
       - name: Get check_run ID for project
         if: always()
-        id: check-run-id 
+        id: check-run-id
         uses: jannekem/run-python-script-action@v1
         continue-on-error: true
         with:
@@ -57,7 +57,7 @@ jobs:
               if "${{ matrix.rock.full_name }}" in cr["name"] and "${{ matrix.rock.sha }}"[:12] in cr["name"]:
                 print(f"::set-output name=rock-build-id::{cr['id']}")
       # Announce to the ROCK commit that a build is starting
-      - name: Report the start of the ROCK CI/CD pipeline 
+      - name: Report the start of the ROCK CI/CD pipeline
         uses: LouisBrunner/checks-action@v1.1.1
         continue-on-error: true
         id: checks-build-start
@@ -84,16 +84,16 @@ jobs:
           repository: ${{ matrix.rock.full_name }}
           ref: ${{ matrix.rock.sha }}
           token: ${{ steps.get_token.outputs.app_token }}
-          submodules: 'recursive'
+          submodules: "recursive"
           path: ${{ env.ROCK_PROJECT_CHECKOUT_LOCATION }}
       # Get the ROCK CI/CD pipeline scripts
       - name: Checkout the ROCK CI/CD pipelines repository
         uses: actions/checkout@v3
         with:
           repository: ubuntu-rocks/rocks-pipelines
-          ref: rocks-ci   # TODO: main
-          token: ${{ secrets.SERVICE_ACCOUNT_PAT }}  # TODO replace by ${{ steps.get_token.outputs.app_token }}
-          submodules: 'recursive'
+          ref: rocks-ci # TODO: main
+          token: ${{ secrets.SERVICE_ACCOUNT_PAT }} # TODO replace by ${{ steps.get_token.outputs.app_token }}
+          submodules: "recursive"
           path: ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}
       # Install requirements for ROCKs CI/CD pipelines
       - name: Prepare environment to run ROCKs CI/CD pipelines
@@ -111,15 +111,15 @@ jobs:
       ################################
       # Run ROCK preflight checks
       - name: Run preflight checks
-        id: preflight-checks 
+        id: preflight-checks
         env:
           ROCKS_DEV_LP_USERNAME: ${{ secrets.ROCKS_DEV_LP_USERNAME }}
           ROCK_PROJECT_PATH: ${{ env.ROCK_PROJECT_CHECKOUT_LOCATION }}
         run: ${{ env.ROCKS_CICD_CHECKOUT_LOCATION }}/src/rocks/Preflight-Checks.sh
       # Announce the preflight checks have finished
-      - name: Report that preflight checks have ended 
+      - name: Report that preflight checks have ended
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           name: Preflight checks completed
@@ -131,16 +131,16 @@ jobs:
             {"summary": "Preflight checks have completed with ${{ steps.preflight-checks.outcome }}"}
 
       ################################
-      ### INFER RISK 
+      ### INFER RISK
       ################################
       # Get the risk for this ROCK
       - name: Infer risk
-        id: infer-risk 
+        id: infer-risk
         run: ${{ env.GITHUB_CI_SCRIPTS_CHECKOUT_LOCATION }}/infer-risk.py --channel ${{ matrix.rock.branch }}
       # Announce the inferred risk
       - name: Report the inferred risk
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           name: Inferred risk = ${{ steps.infer-risk.outputs.risk }}
@@ -170,7 +170,7 @@ jobs:
       # Announce the revision numbers are known
       - name: Report that the revision numbers have been determined
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           name: Revision numbers determined
@@ -201,7 +201,7 @@ jobs:
       # Announce the build was successful
       - name: Report that the build was successful
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           name: ROCKs builds successful
@@ -227,7 +227,7 @@ jobs:
       # Announce the Black-box-testing was successful
       - name: Report that the Black-box-testing was successful
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           name: Black-box tests successful
@@ -250,10 +250,10 @@ jobs:
       # Announce the vulnerability scans were successful
       - name: Report that the image has no high/critical vulnerabilities
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
-          name: No High/Critical vulnerabilities 
+          name: No High/Critical vulnerabilities
           sha: ${{ matrix.rock.sha }}
           repo: ${{ matrix.rock.full_name }}
           conclusion: success
@@ -299,7 +299,7 @@ jobs:
       # Announce the images are now published
       - name: Report that the images have been published
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           name: Images published
@@ -326,7 +326,7 @@ jobs:
       # Announce the Git tags have been created
       - name: Report that the remote Git tags have been created
         uses: LouisBrunner/checks-action@v1.1.1
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           name: Git tags created
@@ -340,10 +340,10 @@ jobs:
       ################################
       # -----------------------------------------------------
       # Announce to the ROCK commit that a build has finished
-      - name: Report the end of the ROCK CI/CD pipeline 
+      - name: Report the end of the ROCK CI/CD pipeline
         uses: LouisBrunner/checks-action@v1.1.1
         if: always()
-        continue-on-error: true   
+        continue-on-error: true
         with:
           token: ${{ steps.get_token.outputs.app_token }}
           check_id: ${{ steps.checks-build-start.outputs.check_id }}
@@ -356,21 +356,39 @@ jobs:
             {"summary": "The CI/CD pipeline for the ${{ matrix.rock.full_name }} ROCKs project, on commit ${{ matrix.rock.sha }} of branch ${{ matrix.rock.branch }} has finished with '${{ job.status }}'. You can view the build logs at ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}"}
       # Create announcement issue with build report
       - name: Notify via issue
-        uses: JasonEtco/create-an-issue@v2
+        uses: maxkomarychev/oction-create-issue@v0.7.1
+        id: announcement-issue
         if: always()
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ steps.get_token.outputs.app_token }}
-          BUILD_STATUS: ${{ job.status }}
-          BUILD_ROCK_PROJECT: ${{ matrix.rock.name }}
-          BUILD_ROCK_PROJECT_URL: "${{ github.server_url }}/${{ matrix.rock.full_name }}"
-          BUILD_FROM_BRANCH: ${{ matrix.rock.full_name }}
-          BUILD_FROM_COMMIT: ${{ matrix.rock.sha }}
-          BUILD_PUBLISHED_ROCKS: ${{ steps.tag-and-publish.outputs.published }}
-          BUILD_GIT_TAGS: ${{ steps.git-tags.outputs.git-tags }}
-          BUILD_LOGS_URL: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          title: "[${{ job.status }}] ubuntu-rocks build for ${{ matrix.rock.name }}"
+          repo: ${{ matrix.rock.name }}
+          body: |
+            Just finished the CI/CD pipelines for ROCK project ${{ matrix.rock.name }}.
+
+            ## Build report
+
+            Status: ${{ job.status }}
+            ROCK project: [${{ matrix.rock.name }}](${{ github.server_url }}/${{ matrix.rock.full_name }})
+            Source branch: ${{ matrix.rock.full_name }}
+            Source commit: ${{ matrix.rock.sha }}
+            ---
+            Published ROCKs: ${{ steps.tag-and-publish.outputs.published }}
+            Git tags: ${{ steps.git-tags.outputs.git-tags }}
+            ---
+            Build logs: ${{ github.server_url }}/${{ github.repository }}/runs/${{ steps.check-run-id.outputs.rock-build-id }}
+          labels: announcement
+      # Lock the announcement issue
+      - name: Lock announcement issue
+        if: ${{ success() }}
+        uses: maxkomarychev/oction-lock-issue@v0.7.1
+        with:
+          token: ${{ steps.get_token.outputs.app_token }}
+          issue_number: ${{ steps.announcement-issue.outputs.number }}
+          repo: ${{ matrix.rock.name }}
+          lock_reason: resolved
   # notify might be hard, cause we need to get the aggregated status of the matrix job
-  # so it's not just a single status      
+  # so it's not just a single status
   # notify:
   #   needs:
   #       - rocks-ci-cd-pipeline

@@ -50,7 +50,7 @@ tag_prefix = "/".join(args.branch.split("/")[:2])
 all_tags = []
 for rock in published:
     _, rock_name, rock_version, rock_base, _, rock_revision, oci_tags = rock.split(",")
-    tag_name = f"{tag_prefix}/{rock_version}/{rock_base}/{rock_revision}/{args.risk}"
+    tag_name = f"{tag_prefix}/{rock_name}/{rock_version}/{rock_base}/{rock_revision}/{args.risk}"
     tag_payload = {
         "tag": tag_name,
         "message": f"New revision {rock_revision} of {rock_name} {rock_version} created (OCI tags: {oci_tags})",
